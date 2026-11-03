@@ -1,0 +1,13 @@
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\bin\Debug\Tonyo'sPizza.exe.config
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\bin\Debug\Tonyo'sPizza.exe
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\bin\Debug\Tonyo'sPizza.pdb
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo'sPizza.csproj.AssemblyReference.cache
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo_sPizza.Properties.Resources.resources
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo'sPizza.csproj.GenerateResource.cache
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo'sPizza.csproj.CoreCompileInputs.cache
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo'sPizza.exe
+c:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo'sPizza.pdb
+C:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo_sPizza.UI.Views.Crew.CrewQueueControl.resources
+C:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo_sPizza.UI.Views.Admin.AdminMenuControl.resources
+C:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo_sPizza.UI.Views.Admin.AdminStockControl.resources
+C:\Users\PC-19-Student\source\repos\Tonyo'sPizza\Tonyo'sPizza\obj\Debug\Tonyo_sPizza.UI.Views.Admin.AdminAuditControl.resources

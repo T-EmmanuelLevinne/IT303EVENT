@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F0907FE1-EEAE-4100-8E01-DA044A3B281E}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Tonyo_sPizza</RootNamespace>
+    <AssemblyName>Tonyo%27sPizza</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Data\DatabaseHelper.cs" />
+    <Compile Include="Data\Repositories\AuditLogRepository.cs" />
+    <Compile Include="Data\Repositories\CategoryRepository.cs" />
+    <Compile Include="Data\Repositories\IngredientCategoryRepository.cs" />
+    <Compile Include="Data\Repositories\IngredientRepository.cs" />
+    <Compile Include="Data\Repositories\MenuItemRepository.cs" />
+    <Compile Include="Data\Repositories\OrderRepository.cs" />
+    <Compile Include="Data\Repositories\PromoVoucherRepository.cs" />
+    <Compile Include="Data\Repositories\UserRepository.cs" />
+    <Compile Include="Models\AuditLog.cs" />
+    <Compile Include="Models\Category.cs" />
+    <Compile Include="Models\Ingredient.cs" />
+    <Compile Include="Models\IngredientCategory.cs" />
+    <Compile Include="Models\MenuItem.cs" />
+    <Compile Include="Models\MenuItemAddOn.cs" />
+    <Compile Include="Models\MenuItemDoughSize.cs" />
+    <Compile Include="Models\MenuItemIngredient.cs" />
+    <Compile Include="Models\Order.cs" />
+    <Compile Include="Models\OrderItem.cs" />
+    <Compile Include="Models\PromoVoucher.cs" />
+    <Compile Include="Models\User.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AuditService.cs" />
+    <Compile Include="Services\AuthService.cs" />
+    <Compile Include="Services\OrderService.cs" />
+    <Compile Include="Services\StockService.cs" />
+    <Compile Include="Services\UserService.cs" />
+    <Compile Include="UI\Controls\CartItemControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\CategoryChipControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\FoodCardControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ModernInputField.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\OrderQueueCardControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\RoundedButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\RoundedPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\AddEditCategoryForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\AddEditDoughSizeDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\AddEditIngredientForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\AddEditMenuItemForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\AddEditPromoDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\ConfirmRoleChangeDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\DbConnectionDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\ItemCustomizationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\RestockDialogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Theme\AppColors.cs" />
+    <Compile Include="UI\Theme\UIHelper.cs" />
+    <Compile Include="UI\Views\Admin\AdminAuditControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminAuditControl.Designer.cs">
+      <DependentUpon>AdminAuditControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminCategoryControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminCategoryControl.Designer.cs">
+      <DependentUpon>AdminCategoryControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminMenuControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminMenuControl.Designer.cs">
+      <DependentUpon>AdminMenuControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminPromoControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminPromoControl.Designer.cs">
+      <DependentUpon>AdminPromoControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminSalesReportControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminSalesReportControl.Designer.cs">
+      <DependentUpon>AdminSalesReportControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminStockControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminStockControl.Designer.cs">
+      <DependentUpon>AdminStockControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminUsersControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminUsersControl.Designer.cs">
+      <DependentUpon>AdminUsersControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Crew\CrewQueueControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Crew\CrewQueueControl.Designer.cs">
+      <DependentUpon>CrewQueueControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Customer\CustomerMenuControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Customer\CustomerMenuControl.Designer.cs">
+      <DependentUpon>CustomerMenuControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Customer\CustomerOrdersControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Customer\CustomerOrdersControl.Designer.cs">
+      <DependentUpon>CustomerOrdersControl.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="UI\Views\Admin\AdminAuditControl.resx">
+      <DependentUpon>AdminAuditControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Views\Admin\AdminMenuControl.resx">
+      <DependentUpon>AdminMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Views\Admin\AdminStockControl.resx">
+      <DependentUpon>AdminStockControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Views\Crew\CrewQueueControl.resx">
+      <DependentUpon>CrewQueueControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="Database\DatabaseSetup.sql" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
