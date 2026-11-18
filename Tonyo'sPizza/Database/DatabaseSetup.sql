@@ -12,18 +12,24 @@ GO
 USE [TonyosPizzaDB];
 GO
 
--- 1. Users Table (Authentication & Role Management)
+-- 1. Users Table (Authentication, Security Lockout & Role Management)
 IF OBJECT_ID(N'dbo.Users', N'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[Users] (
         [UserId] INT IDENTITY(1,1) PRIMARY KEY,
         [Username] NVARCHAR(50) NOT NULL UNIQUE,
         [PasswordHash] NVARCHAR(256) NOT NULL,
+        [Salt] NVARCHAR(64) NULL,
         [FullName] NVARCHAR(100) NOT NULL,
         [Role] NVARCHAR(20) NOT NULL CHECK ([Role] IN ('Admin', 'Crew', 'Customer')),
         [Phone] NVARCHAR(20) NULL,
         [Address] NVARCHAR(255) NULL,
-        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE()
+        [IsActive] BIT NOT NULL DEFAULT 1,
+        [FailedLoginAttempts] INT NOT NULL DEFAULT 0,
+        [IsLocked] BIT NOT NULL DEFAULT 0,
+        [LockoutUntil] DATETIME NULL,
+        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE(),
+        [RowVersion] ROWVERSION NOT NULL
     );
 END
 GO
@@ -58,7 +64,9 @@ BEGIN
         [CategoryName] NVARCHAR(50) NOT NULL UNIQUE,
         [IconKey] NVARCHAR(50) NULL,
         [Description] NVARCHAR(255) NULL,
-        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE()
+        [IsActive] BIT NOT NULL DEFAULT 1,
+        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE(),
+        [RowVersion] ROWVERSION NOT NULL
     );
 END
 GO
@@ -96,11 +104,13 @@ BEGIN
         [CategoryId] INT NULL FOREIGN KEY REFERENCES [dbo].[IngredientCategories]([IngredientCategoryId]) ON DELETE SET NULL,
         [CategoryName] NVARCHAR(50) NOT NULL DEFAULT 'General',
         [Name] NVARCHAR(100) NOT NULL UNIQUE,
-        [CurrentStock] DECIMAL(18,2) NOT NULL DEFAULT 0,
+        [CurrentStock] DECIMAL(18,2) NOT NULL DEFAULT 0 CHECK ([CurrentStock] >= 0),
         [Unit] NVARCHAR(20) NOT NULL, -- e.g., 'g', 'kg', 'pcs', 'ml', 'L', 'slices'
-        [MinThreshold] DECIMAL(18,2) NOT NULL DEFAULT 10,
+        [MinThreshold] DECIMAL(18,2) NOT NULL DEFAULT 10 CHECK ([MinThreshold] >= 0),
         [CostPerUnit] DECIMAL(18,2) NOT NULL DEFAULT 0,
-        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE()
+        [IsActive] BIT NOT NULL DEFAULT 1,
+        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE(),
+        [RowVersion] ROWVERSION NOT NULL
     );
 END
 ELSE
@@ -124,11 +134,13 @@ BEGIN
         [CategoryId] INT NULL FOREIGN KEY REFERENCES [dbo].[Categories]([CategoryId]) ON DELETE SET NULL,
         [Name] NVARCHAR(100) NOT NULL,
         [Description] NVARCHAR(500) NULL,
-        [Price] DECIMAL(18,2) NOT NULL,
+        [Price] DECIMAL(18,2) NOT NULL CHECK ([Price] >= 0),
         [OldPrice] DECIMAL(18,2) NULL,
         [ImageBase64] NVARCHAR(MAX) NULL,
         [IsAvailable] BIT NOT NULL DEFAULT 1,
-        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE()
+        [IsActive] BIT NOT NULL DEFAULT 1,
+        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE(),
+        [RowVersion] ROWVERSION NOT NULL
     );
 END
 GO
@@ -445,6 +457,8 @@ BEGIN
         [UserId] INT NULL,
         [Username] NVARCHAR(50) NOT NULL,
         [Action] NVARCHAR(50) NOT NULL,
+        [TableName] NVARCHAR(50) NULL,
+        [RecordId] NVARCHAR(50) NULL,
         [Details] NVARCHAR(500) NOT NULL,
         [Timestamp] DATETIME NOT NULL DEFAULT GETDATE()
     );
@@ -459,12 +473,13 @@ BEGIN
         [Code] NVARCHAR(50) NOT NULL UNIQUE,
         [Description] NVARCHAR(255) NULL,
         [DiscountType] NVARCHAR(20) NOT NULL DEFAULT 'Percentage',
-        [DiscountValue] DECIMAL(18,2) NOT NULL DEFAULT 10.00,
-        [MinOrderAmount] DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        [DiscountValue] DECIMAL(18,2) NOT NULL DEFAULT 10.00 CHECK ([DiscountValue] > 0),
+        [MinOrderAmount] DECIMAL(18,2) NOT NULL DEFAULT 0.00 CHECK ([MinOrderAmount] >= 0),
         [MaxDiscountAmount] DECIMAL(18,2) NULL,
         [IsActive] BIT NOT NULL DEFAULT 1,
         [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE(),
-        [ExpiresAt] DATETIME NULL
+        [ExpiresAt] DATETIME NULL,
+        [RowVersion] ROWVERSION NOT NULL
     );
 
     INSERT INTO [dbo].[PromoVouchers] ([Code], [Description], [DiscountType], [DiscountValue], [MinOrderAmount], [IsActive])
@@ -472,6 +487,37 @@ BEGIN
     ('TONYO25', '25% discount voucher on wood-fired orders', 'Percentage', 25.00, 0.00, 1),
     ('PIZZA50', '₱50 off on artisan family orders', 'Fixed', 50.00, 300.00, 1),
     ('FREEPIZZA', 'Special promo treat voucher', 'Fixed', 100.00, 500.00, 1);
+END
+GO
+
+-- 13. StockTransactions & StockTransactionItems Tables (Second Header/Detail Transaction Ledger)
+IF OBJECT_ID(N'dbo.StockTransactions', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[StockTransactions] (
+        [StockTxId] INT IDENTITY(1,1) PRIMARY KEY,
+        [TransactionType] NVARCHAR(30) NOT NULL DEFAULT 'Restock' CHECK ([TransactionType] IN ('Restock', 'Adjustment', 'Void')),
+        [UserId] INT NULL FOREIGN KEY REFERENCES [dbo].[Users]([UserId]) ON DELETE SET NULL,
+        [Username] NVARCHAR(50) NOT NULL DEFAULT 'Admin',
+        [Notes] NVARCHAR(500) NULL,
+        [Status] NVARCHAR(20) NOT NULL DEFAULT 'Posted' CHECK ([Status] IN ('Posted', 'Voided')),
+        [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE(),
+        [RowVersion] ROWVERSION NOT NULL
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.StockTransactionItems', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[StockTransactionItems] (
+        [DetailId] INT IDENTITY(1,1) PRIMARY KEY,
+        [StockTxId] INT NOT NULL FOREIGN KEY REFERENCES [dbo].[StockTransactions]([StockTxId]) ON DELETE CASCADE,
+        [IngredientId] INT NOT NULL FOREIGN KEY REFERENCES [dbo].[Ingredients]([IngredientId]),
+        [IngredientName] NVARCHAR(100) NOT NULL,
+        [QuantityChange] DECIMAL(18,2) NOT NULL,
+        [Unit] NVARCHAR(20) NOT NULL,
+        [StockBefore] DECIMAL(18,2) NOT NULL,
+        [StockAfter] DECIMAL(18,2) NOT NULL
+    );
 END
 GO
 

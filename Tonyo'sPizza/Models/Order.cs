@@ -88,6 +88,7 @@ namespace Tonyo_sPizza.Models
         public bool IsCustomerDeleted { get; set; } = false;
         public DateTime? CustomerDeletedAt { get; set; } = null;
         public bool IsStockDeducted { get; set; } = false;
+        public byte[] RowVersion { get; set; }
 
         public Order()
         {

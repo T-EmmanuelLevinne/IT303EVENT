@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -8,6 +9,7 @@ using Tonyo_sPizza.Data.Repositories;
 using Tonyo_sPizza.Models;
 using Tonyo_sPizza.Services;
 using Tonyo_sPizza.UI.Controls;
+using Tonyo_sPizza.UI.Forms.Dialogs;
 using Tonyo_sPizza.UI.Theme;
 
 namespace Tonyo_sPizza.UI.Views.Crew
@@ -31,26 +33,21 @@ namespace Tonyo_sPizza.UI.Views.Crew
 
         private void SetupCustomUIAndEvents()
         {
+            UIHelper.EnableDoubleBuffering(this);
+            UIHelper.EnableDoubleBuffering(_flpOrders);
+
             if (lblSearchIcon != null)
             {
                 lblSearchIcon.Paint += (s, e) =>
                 {
                     UIHelper.SetHighQuality(e.Graphics);
-                    UIHelper.DrawVectorIcon(e.Graphics, "search", new Rectangle(0, 0, 16, 16), AppColors.TextLight);
+                    UIHelper.DrawVectorIcon(e.Graphics, "search", new Rectangle(0, 0, 15, 15), AppColors.TextLight);
                 };
             }
 
-            if (_txtSearch != null)
-            {
-                _txtSearch.TextChanged += (s, e) => FilterAndRenderCards();
-            }
+            if (_txtSearch != null) _txtSearch.TextChanged += (s, e) => FilterAndRenderCards();
+            if (_btnRefresh != null) _btnRefresh.Click += (s, e) => LoadQueueOrders();
 
-            if (_btnRefresh != null)
-            {
-                _btnRefresh.Click += (s, e) => LoadQueueOrders();
-            }
-
-            // Bind filter tags and clicks
             BindTabButton(_btnFilterAll, "All");
             BindTabButton(_btnFilterPending, "Pending");
             BindTabButton(_btnFilterPreparing, "Preparing");
@@ -61,20 +58,9 @@ namespace Tonyo_sPizza.UI.Views.Crew
 
             UpdateTabHighlights();
 
-            if (_chkSelectAll != null)
-            {
-                _chkSelectAll.CheckedChanged += ChkSelectAll_CheckedChanged;
-            }
-
-            if (_btnArchiveSelected != null)
-            {
-                _btnArchiveSelected.Click += BtnArchiveSelected_Click;
-            }
-
-            if (_btnCancelSelected != null)
-            {
-                _btnCancelSelected.Click += BtnCancelSelected_Click;
-            }
+            if (_chkSelectAll != null) _chkSelectAll.CheckedChanged += ChkSelectAll_CheckedChanged;
+            if (_btnArchiveSelected != null) _btnArchiveSelected.Click += BtnArchiveSelected_Click;
+            if (_btnCancelSelected != null) _btnCancelSelected.Click += BtnCancelSelected_Click;
         }
 
         private void BindTabButton(RoundedButton btn, string filterKey)
@@ -108,7 +94,7 @@ namespace Tonyo_sPizza.UI.Views.Crew
                     else
                     {
                         b.NormalColor = Color.White;
-                        b.HoverColor = Color.FromArgb(241, 245, 249);
+                        b.HoverColor = AppColors.SecondaryHover;
                         b.ForeColor = AppColors.TextDark;
                     }
                     b.Invalidate();
@@ -120,18 +106,17 @@ namespace Tonyo_sPizza.UI.Views.Crew
         {
             try
             {
-                // Auto prune archives older than 30 days
                 _orderRepo.PruneExpiredArchives();
-
                 _allLoadedOrders = _orderRepo.GetAllOrdersForCrew(_activeFilter);
                 FilterAndRenderCards();
             }
             catch (Exception ex)
             {
+                ErrorLogger.Log(ex, "CrewQueueControl.LoadQueueOrders");
                 _flpOrders.Controls.Clear();
                 Label lblErr = new Label
                 {
-                    Text = $"Error loading kitchen queue: {ex.Message}",
+                    Text = "Unable to load kitchen queue right now. Click 'Refresh Queue' to retry.",
                     Font = new Font("Segoe UI", 10f),
                     ForeColor = AppColors.StatusCancelled,
                     AutoSize = true,
@@ -143,46 +128,73 @@ namespace Tonyo_sPizza.UI.Views.Crew
 
         private void FilterAndRenderCards()
         {
-            _flpOrders.Controls.Clear();
-            string query = _txtSearch?.Text?.Trim().ToLower() ?? "";
-
-            var filtered = _allLoadedOrders.Where(o =>
-                string.IsNullOrEmpty(query) ||
-                o.OrderId.ToString().Contains(query) ||
-                o.CustomerName.ToLower().Contains(query) ||
-                o.Status.ToLower().Contains(query) ||
-                (!string.IsNullOrEmpty(o.Notes) && o.Notes.ToLower().Contains(query)) ||
-                (o.Items != null && o.Items.Any(i => i.ItemName.ToLower().Contains(query)))
-            ).ToList();
-
-            if (filtered.Count == 0)
+            _flpOrders.SuspendLayout();
+            try
             {
-                Label lblEmpty = new Label
+                _flpOrders.Controls.Clear();
+                string query = _txtSearch?.Text?.Trim().ToLower() ?? "";
+
+                var filtered = _allLoadedOrders.Where(o =>
+                    string.IsNullOrEmpty(query) ||
+                    o.OrderId.ToString().Contains(query) ||
+                    (o.CustomerName ?? "").ToLower().Contains(query) ||
+                    (o.Status ?? "").ToLower().Contains(query) ||
+                    (!string.IsNullOrEmpty(o.Notes) && o.Notes.ToLower().Contains(query)) ||
+                    (o.Items != null && o.Items.Any(i => (i.ItemName ?? "").ToLower().Contains(query)))
+                ).ToList();
+
+                if (filtered.Count == 0)
                 {
-                    Text = _activeFilter == "Archived" ? "No archived orders found in the last 30 days." : "No orders found in this queue category.",
-                    Font = new Font("Segoe UI Semibold", 11f, FontStyle.Bold),
-                    ForeColor = AppColors.TextMuted,
-                    AutoSize = true,
-                    Padding = new Padding(24)
-                };
-                _flpOrders.Controls.Add(lblEmpty);
+                    Label lblEmpty = new Label
+                    {
+                        Text = _activeFilter == "Archived"
+                            ? "No archived orders found in the last 30 days."
+                            : "No orders found in this queue category.",
+                        Font = new Font("Segoe UI Semibold", 11f, FontStyle.Bold),
+                        ForeColor = AppColors.TextMuted,
+                        AutoSize = true,
+                        Padding = new Padding(24)
+                    };
+                    _flpOrders.Controls.Add(lblEmpty);
+                    UpdateSelectedSummary();
+                    return;
+                }
+
+                foreach (var order in filtered)
+                {
+                    var card = new OrderQueueCardControl(order, isCrewView: true);
+                    card.StatusChangeRequested += OnStatusChangeRequested;
+                    card.CancelRequested += OnSingleCancelRequested;
+                    card.ArchiveRequested += OnSingleArchiveRequested;
+                    card.ReceiptRequested += OnReceiptRequested;
+                    card.SelectionChanged += (s, e) => UpdateSelectedSummary();
+
+                    _flpOrders.Controls.Add(card);
+                }
+
                 UpdateSelectedSummary();
-                return;
+                UpdateTabHighlights();
             }
-
-            foreach (var order in filtered)
+            finally
             {
-                var card = new OrderQueueCardControl(order, isCrewView: true);
-                card.StatusChangeRequested += OnStatusChangeRequested;
-                card.CancelRequested += OnSingleCancelRequested;
-                card.ArchiveRequested += OnSingleArchiveRequested;
-                card.SelectionChanged += (s, e) => UpdateSelectedSummary();
-
-                _flpOrders.Controls.Add(card);
+                _flpOrders.ResumeLayout(true);
             }
+        }
 
-            UpdateSelectedSummary();
-            UpdateTabHighlights();
+        private void OnReceiptRequested(Order order)
+        {
+            if (order == null) return;
+            try
+            {
+                using (var dlg = new ReceiptPreviewDialog(order))
+                {
+                    dlg.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.ShowFriendlyError("Unable to open receipt preview.", ex, "Receipt Error", this);
+            }
         }
 
         private void ChkSelectAll_CheckedChanged(object sender, EventArgs e)
@@ -212,17 +224,17 @@ namespace Tonyo_sPizza.UI.Views.Crew
             if (selectedCards.Count == 0) return;
 
             var ids = selectedCards.Select(c => c.Order.OrderId).ToList();
-            if (MessageBox.Show($"Are you sure you want to move {ids.Count} order(s) to the 30-day archive?", "Archive Orders", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (MessageBox.Show(this, $"Move {ids.Count} selected order(s) to the 30-day archive?", "Archive Orders", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 if (OrderService.Instance.ArchiveOrders(ids, out string err))
                 {
-                    MessageBox.Show($"Successfully archived {ids.Count} order(s).", "Archive Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(this, $"Successfully archived {ids.Count} order(s).", "Archive Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     _chkSelectAll.Checked = false;
                     LoadQueueOrders();
                 }
                 else
                 {
-                    MessageBox.Show($"Failed to archive orders: {err}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Failed to archive orders: {err}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -233,24 +245,24 @@ namespace Tonyo_sPizza.UI.Views.Crew
             if (selectedCards.Count == 0) return;
 
             var ids = selectedCards.Select(c => c.Order.OrderId).ToList();
-            if (MessageBox.Show($"Are you sure you want to cancel {ids.Count} order(s)?", "Cancel Orders", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (MessageBox.Show(this, $"Void / Cancel {ids.Count} selected order(s) and restore unused ingredient stock?", "Cancel Orders", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 if (OrderService.Instance.CancelOrders(ids, out string err))
                 {
-                    MessageBox.Show($"Cancelled {ids.Count} order(s).", "Orders Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(this, $"Cancelled {ids.Count} order(s).", "Orders Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     _chkSelectAll.Checked = false;
                     LoadQueueOrders();
                 }
                 else
                 {
-                    MessageBox.Show($"Failed to cancel orders: {err}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Failed to cancel orders: {err}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
         private void OnSingleArchiveRequested(int orderId)
         {
-            if (MessageBox.Show($"Move Order #{orderId} to the 30-day archive?", "Archive Order", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (MessageBox.Show(this, $"Move Order #{orderId} to the 30-day archive?", "Archive Order", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 if (OrderService.Instance.ArchiveOrder(orderId, out string err))
                 {
@@ -258,14 +270,14 @@ namespace Tonyo_sPizza.UI.Views.Crew
                 }
                 else
                 {
-                    MessageBox.Show($"Failed to archive order: {err}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Failed to archive order: {err}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
         private void OnSingleCancelRequested(int orderId)
         {
-            if (MessageBox.Show($"Are you sure you want to cancel Order #{orderId}?", "Cancel Order", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (MessageBox.Show(this, $"Cancel Order #{orderId} and return its ingredients to inventory?", "Confirm Order Cancellation", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 if (OrderService.Instance.CancelOrder(orderId, out string err))
                 {
@@ -273,7 +285,7 @@ namespace Tonyo_sPizza.UI.Views.Crew
                 }
                 else
                 {
-                    MessageBox.Show($"Failed to cancel order: {err}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Failed to cancel order: {err}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -286,29 +298,24 @@ namespace Tonyo_sPizza.UI.Views.Crew
                 {
                     if (string.Equals(newStatus, "Completed", StringComparison.OrdinalIgnoreCase))
                     {
-                        AuditService.Instance.Log("Order Completed & Archived", $"Order #{orderId} completed and automatically moved to 30-day archive.");
+                        AuditService.Instance.Log("Update", $"Order #{orderId} completed and automatically moved to 30-day archive.", "Orders", orderId.ToString());
                     }
                     else
                     {
-                        AuditService.Instance.Log("Update Order Status", $"Order #{orderId} changed status to '{newStatus}'");
+                        AuditService.Instance.Log("Update", $"Order #{orderId} changed status to '{newStatus}'.", "Orders", orderId.ToString());
                     }
                     LoadQueueOrders();
                 }
             }
+            catch (DBConcurrencyException cex)
+            {
+                MessageBox.Show(this, cex.Message, "Concurrent Update Detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                LoadQueueOrders();
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error updating order status: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorLogger.ShowFriendlyError("Could not update order status right now.", ex, "Order Status Error", this);
             }
-        }
-
-        private void lblArchiveNotice_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void _btnArchiveSelected_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }

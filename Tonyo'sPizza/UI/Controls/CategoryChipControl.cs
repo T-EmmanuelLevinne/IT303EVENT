@@ -1,7 +1,6 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Tonyo_sPizza.Models;
 using Tonyo_sPizza.UI.Theme;
@@ -10,12 +9,15 @@ namespace Tonyo_sPizza.UI.Controls
 {
     public class CategoryChipControl : Control
     {
-        private Category _category;
+        private readonly Category _category;
         private bool _isSelected = false;
         private bool _isHovered = false;
         private bool _isPressed = false;
         private readonly string _displayName;
-        private int _borderRadius = 10;
+        private readonly int _borderRadius = 10;
+        private float _hoverProgress = 0f;
+        private float _targetHover = 0f;
+        private Timer _animTimer;
 
         public Category Category => _category;
 
@@ -40,19 +42,16 @@ namespace Tonyo_sPizza.UI.Controls
             _isSelected = isSelected;
 
             string rawName = category != null ? category.CategoryName : "All Items";
-            // Clean up multiple spaces (e.g., "Sides  Appetizers" -> "Sides Appetizers")
-            _displayName = Regex.Replace(rawName ?? "All Items", @"\s+", " ").Trim();
+            _displayName = System.Text.RegularExpressions.Regex.Replace(rawName ?? "All Items", @"\s+", " ").Trim();
 
-            // Format all-caps (e.g., "LOVEY" -> "Lovey") for elegant typography
             if (_displayName.Length > 2 && _displayName == _displayName.ToUpperInvariant())
             {
                 _displayName = char.ToUpper(_displayName[0]) + _displayName.Substring(1).ToLower();
             }
 
             Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
-
             int textWidth = TextRenderer.MeasureText(_displayName, Font).Width;
-            int calculatedWidth = Math.Max(84, textWidth + 28);
+            int calculatedWidth = Math.Max(88, textWidth + 30);
 
             SetStyle(ControlStyles.UserPaint |
                      ControlStyles.AllPaintingInWmPaint |
@@ -62,16 +61,42 @@ namespace Tonyo_sPizza.UI.Controls
 
             Size = new Size(calculatedWidth, 36);
             Margin = new Padding(0, 2, 8, 2);
-            BackColor = Color.FromArgb(248, 250, 252);
+            BackColor = AppColors.Background;
             Cursor = Cursors.Hand;
             DoubleBuffered = true;
+
+            _animTimer = new Timer { Interval = 16 };
+            _animTimer.Tick += (s, e) =>
+            {
+                float step = 0.24f;
+                if (_hoverProgress < _targetHover) _hoverProgress = Math.Min(_targetHover, _hoverProgress + step);
+                else if (_hoverProgress > _targetHover) _hoverProgress = Math.Max(_targetHover, _hoverProgress - step);
+                Invalidate();
+                if (Math.Abs(_hoverProgress - _targetHover) < 0.01f)
+                {
+                    _hoverProgress = _targetHover;
+                    _animTimer.Stop();
+                }
+            };
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && _animTimer != null)
+            {
+                _animTimer.Stop();
+                _animTimer.Dispose();
+                _animTimer = null;
+            }
+            base.Dispose(disposing);
         }
 
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
             _isHovered = true;
-            Invalidate();
+            _targetHover = 1f;
+            if (!_animTimer.Enabled) _animTimer.Start();
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -79,17 +104,14 @@ namespace Tonyo_sPizza.UI.Controls
             base.OnMouseLeave(e);
             _isHovered = false;
             _isPressed = false;
-            Invalidate();
+            _targetHover = 0f;
+            if (!_animTimer.Enabled) _animTimer.Start();
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (e.Button == MouseButtons.Left)
-            {
-                _isPressed = true;
-                Invalidate();
-            }
+            if (e.Button == MouseButtons.Left) { _isPressed = true; Invalidate(); }
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -110,7 +132,6 @@ namespace Tonyo_sPizza.UI.Controls
             Graphics g = e.Graphics;
             UIHelper.SetHighQuality(g);
 
-            // 1. Blend with parent background to eliminate jagged edges
             Color parentBg = Parent != null ? Parent.BackColor : AppColors.Background;
             using (SolidBrush parentBrush = new SolidBrush(parentBg))
             {
@@ -130,45 +151,25 @@ namespace Tonyo_sPizza.UI.Controls
                 borderColor = bgColor;
                 textColor = Color.White;
             }
+            else if (_isPressed)
+            {
+                bgColor = AppColors.SecondaryPressed;
+                borderColor = AppColors.PrimaryBorder;
+                textColor = AppColors.TextDark;
+            }
             else
             {
-                if (_isPressed)
-                {
-                    bgColor = Color.FromArgb(241, 245, 249);
-                    borderColor = Color.FromArgb(203, 213, 225);
-                    textColor = AppColors.TextDark;
-                }
-                else if (_isHovered)
-                {
-                    bgColor = Color.FromArgb(248, 250, 252);
-                    borderColor = Color.FromArgb(203, 213, 225);
-                    textColor = AppColors.Primary;
-                }
-                else
-                {
-                    bgColor = Color.White;
-                    borderColor = Color.FromArgb(226, 232, 240);
-                    textColor = Color.FromArgb(51, 65, 85);
-                }
+                bgColor = AppColors.Lerp(Color.White, AppColors.PrimarySoft, _hoverProgress);
+                borderColor = AppColors.Lerp(AppColors.Border, AppColors.PrimaryBorder, _hoverProgress);
+                textColor = _isHovered ? AppColors.PrimaryDark : AppColors.TextMedium;
             }
 
             using (GraphicsPath path = UIHelper.GetRoundedRectanglePath(rect, _borderRadius))
             {
-                // Fill button body
-                using (SolidBrush brush = new SolidBrush(bgColor))
-                {
-                    g.FillPath(brush, path);
-                }
-
-                // Draw Border
-                using (Pen pen = new Pen(borderColor, 1.2f))
-                {
-                    pen.Alignment = PenAlignment.Inset;
-                    g.DrawPath(pen, path);
-                }
+                using (SolidBrush brush = new SolidBrush(bgColor)) g.FillPath(brush, path);
+                using (Pen pen = new Pen(borderColor, 1.2f) { Alignment = PenAlignment.Inset }) g.DrawPath(pen, path);
             }
 
-            // Draw Centered Text
             TextRenderer.DrawText(
                 g,
                 _displayName,

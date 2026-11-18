@@ -1,8 +1,10 @@
 using System;
+using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
 using Tonyo_sPizza.Data.Repositories;
 using Tonyo_sPizza.Models;
+using Tonyo_sPizza.Services;
 using Tonyo_sPizza.UI.Controls;
 using Tonyo_sPizza.UI.Theme;
 
@@ -102,8 +104,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(234, y),
                 Size = new Size(140, 40),
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(226, 232, 240),
-                HoverColor = Color.FromArgb(203, 213, 225),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                PressedColor = AppColors.SecondaryPressed,
                 ForeColor = AppColors.TextDark
             };
             _btnCancel.Click += (s, e) => Close();
@@ -119,6 +122,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
 
             Controls.Add(content);
             Controls.Add(header);
+
+            AcceptButton = _btnSave;
+            CancelButton = _btnCancel;
         }
 
         private void PopulateData()
@@ -162,9 +168,17 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 DialogResult = DialogResult.OK;
                 Close();
             }
+            catch (DBConcurrencyException cex)
+            {
+                MessageBox.Show(this, cex.Message, "Concurrent Edit Detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (InvalidOperationException iex)
+            {
+                MessageBox.Show(this, iex.Message, "Validation Notice", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving category: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorLogger.ShowFriendlyError("Unable to save category changes right now.", ex, "Save Category Error", this);
             }
         }
     }

@@ -9,13 +9,15 @@ namespace Tonyo_sPizza.Data.Repositories
 {
     public class MenuItemRepository
     {
-        public List<MenuItem> GetAllMenuItems()
+        public List<MenuItem> GetAllMenuItems(bool includeArchived = false)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             List<MenuItem> list = new List<MenuItem>();
             string sql = @"SELECT m.*, c.CategoryName 
                            FROM MenuItems m 
-                           LEFT JOIN Categories c ON m.CategoryId = c.CategoryId 
-                           ORDER BY m.ItemId DESC";
+                           LEFT JOIN Categories c ON m.CategoryId = c.CategoryId " +
+                           (includeArchived ? "" : " WHERE ISNULL(m.IsActive, 1) = 1 ") +
+                           " ORDER BY m.ItemId DESC";
             DataTable dt = DatabaseHelper.ExecuteQuery(sql);
             foreach (DataRow row in dt.Rows)
             {
@@ -30,11 +32,12 @@ namespace Tonyo_sPizza.Data.Repositories
 
         public List<MenuItem> GetMenuItemsByCategory(int categoryId)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             List<MenuItem> list = new List<MenuItem>();
             string sql = @"SELECT m.*, c.CategoryName 
                            FROM MenuItems m 
                            LEFT JOIN Categories c ON m.CategoryId = c.CategoryId 
-                           WHERE m.CategoryId = @CategoryId
+                           WHERE m.CategoryId = @CategoryId AND ISNULL(m.IsActive, 1) = 1
                            ORDER BY m.ItemId DESC";
             SqlParameter[] parameters = {
                 new SqlParameter("@CategoryId", SqlDbType.Int) { Value = categoryId }
@@ -51,13 +54,18 @@ namespace Tonyo_sPizza.Data.Repositories
             return list;
         }
 
-        public List<MenuItem> GetMenuItemsFiltered(string search = null, int? categoryId = null)
+        public List<MenuItem> GetMenuItemsFiltered(string search = null, int? categoryId = null, bool includeArchived = false)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             List<MenuItem> list = new List<MenuItem>();
             string sql = @"SELECT m.*, c.CategoryName 
                            FROM MenuItems m 
                            LEFT JOIN Categories c ON m.CategoryId = c.CategoryId 
                            WHERE 1=1 ";
+            if (!includeArchived)
+            {
+                sql += " AND ISNULL(m.IsActive, 1) = 1 ";
+            }
             List<SqlParameter> parameters = new List<SqlParameter>();
             if (categoryId.HasValue && categoryId.Value > 0)
             {
@@ -69,7 +77,7 @@ namespace Tonyo_sPizza.Data.Repositories
                 sql += " AND (m.Name LIKE @Query OR m.Description LIKE @Query OR c.CategoryName LIKE @Query) ";
                 parameters.Add(new SqlParameter("@Query", SqlDbType.NVarChar, 100) { Value = $"%{search.Trim()}%" });
             }
-            sql += " ORDER BY m.ItemId DESC";
+            sql += " ORDER BY ISNULL(m.IsActive, 1) DESC, m.ItemId DESC";
             DataTable dt = DatabaseHelper.ExecuteQuery(sql, parameters.Count > 0 ? parameters.ToArray() : null);
             foreach (DataRow row in dt.Rows)
             {
@@ -84,11 +92,12 @@ namespace Tonyo_sPizza.Data.Repositories
 
         public List<MenuItem> SearchMenuItems(string query)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             List<MenuItem> list = new List<MenuItem>();
             string sql = @"SELECT m.*, c.CategoryName 
                            FROM MenuItems m 
                            LEFT JOIN Categories c ON m.CategoryId = c.CategoryId 
-                           WHERE m.Name LIKE @Query OR m.Description LIKE @Query OR c.CategoryName LIKE @Query
+                           WHERE ISNULL(m.IsActive, 1) = 1 AND (m.Name LIKE @Query OR m.Description LIKE @Query OR c.CategoryName LIKE @Query)
                            ORDER BY m.ItemId DESC";
             SqlParameter[] parameters = {
                 new SqlParameter("@Query", SqlDbType.NVarChar, 100) { Value = "%" + query.Trim() + "%" }
@@ -175,6 +184,7 @@ namespace Tonyo_sPizza.Data.Repositories
 
         public bool UpdateMenuItem(MenuItem item)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
@@ -185,10 +195,10 @@ namespace Tonyo_sPizza.Data.Repositories
                         string sql = @"UPDATE MenuItems 
                                        SET CategoryId = @CategoryId, Name = @Name, Description = @Description, 
                                            Price = @Price, OldPrice = @OldPrice, ImageBase64 = @ImageBase64, 
-                                           IsAvailable = @IsAvailable
+                                           IsAvailable = @IsAvailable, IsActive = @IsActive
                                        WHERE ItemId = @ItemId";
 
-                        SqlParameter[] parameters = {
+                        var parameters = new List<SqlParameter> {
                             new SqlParameter("@CategoryId", SqlDbType.Int) { Value = (object)item.CategoryId ?? DBNull.Value },
                             new SqlParameter("@Name", SqlDbType.NVarChar, 100) { Value = item.Name },
                             new SqlParameter("@Description", SqlDbType.NVarChar, 500) { Value = (object)item.Description ?? DBNull.Value },
@@ -196,10 +206,17 @@ namespace Tonyo_sPizza.Data.Repositories
                             new SqlParameter("@OldPrice", SqlDbType.Decimal) { Value = (object)item.OldPrice ?? DBNull.Value },
                             new SqlParameter("@ImageBase64", SqlDbType.NVarChar, -1) { Value = (object)item.ImageBase64 ?? DBNull.Value },
                             new SqlParameter("@IsAvailable", SqlDbType.Bit) { Value = item.IsAvailable },
+                            new SqlParameter("@IsActive", SqlDbType.Bit) { Value = item.IsActive },
                             new SqlParameter("@ItemId", SqlDbType.Int) { Value = item.ItemId }
                         };
 
-                        int rows = DatabaseHelper.ExecuteNonQuery(sql, parameters, trans);
+                        if (item.RowVersion != null && item.RowVersion.Length == 8)
+                        {
+                            sql += " AND RowVersion = @RowVersion";
+                            parameters.Add(new SqlParameter("@RowVersion", SqlDbType.Timestamp) { Value = item.RowVersion });
+                        }
+
+                        int rows = DatabaseHelper.ExecuteNonQuery(sql, parameters.ToArray(), trans);
                         if (rows > 0)
                         {
                             SaveRecipeIngredients(item.ItemId, item.RecipeIngredients, trans);
@@ -209,6 +226,10 @@ namespace Tonyo_sPizza.Data.Repositories
                             return true;
                         }
                         trans.Rollback();
+                        if (item.RowVersion != null && GetMenuItemById(item.ItemId) != null)
+                        {
+                            throw new DBConcurrencyException($"'{item.Name}' was modified by another administrator. Please refresh before saving.");
+                        }
                         return false;
                     }
                     catch
@@ -218,6 +239,24 @@ namespace Tonyo_sPizza.Data.Repositories
                     }
                 }
             }
+        }
+
+        public bool HasMenuItemOrders(int itemId)
+        {
+            string sql = "SELECT COUNT(*) FROM OrderItems WHERE ItemId = @ItemId";
+            object res = DatabaseHelper.ExecuteScalar(sql, new[] { new SqlParameter("@ItemId", SqlDbType.Int) { Value = itemId } });
+            return Convert.ToInt32(res) > 0;
+        }
+
+        public bool SetMenuItemActiveStatus(int itemId, bool isActive)
+        {
+            DatabaseHelper.EnsureSchemaUpgrades();
+            string sql = "UPDATE MenuItems SET IsActive = @IsActive WHERE ItemId = @ItemId";
+            SqlParameter[] parameters = {
+                new SqlParameter("@IsActive", SqlDbType.Bit) { Value = isActive },
+                new SqlParameter("@ItemId", SqlDbType.Int) { Value = itemId }
+            };
+            return DatabaseHelper.ExecuteNonQuery(sql, parameters) > 0;
         }
 
         public bool DeleteMenuItem(int itemId)
@@ -422,7 +461,7 @@ namespace Tonyo_sPizza.Data.Repositories
 
         private MenuItem MapRowToMenuItem(DataRow row)
         {
-            return new MenuItem(
+            var m = new MenuItem(
                 Convert.ToInt32(row["ItemId"]),
                 row["CategoryId"] != DBNull.Value ? (int?)Convert.ToInt32(row["CategoryId"]) : null,
                 Convert.ToString(row["Name"]),
@@ -434,6 +473,13 @@ namespace Tonyo_sPizza.Data.Repositories
                 Convert.ToDateTime(row["CreatedAt"]),
                 row.Table.Columns.Contains("CategoryName") && row["CategoryName"] != DBNull.Value ? Convert.ToString(row["CategoryName"]) : "General"
             );
+
+            if (row.Table.Columns.Contains("IsActive") && row["IsActive"] != DBNull.Value)
+                m.IsActive = Convert.ToBoolean(row["IsActive"]);
+            if (row.Table.Columns.Contains("RowVersion") && row["RowVersion"] != DBNull.Value)
+                m.RowVersion = (byte[])row["RowVersion"];
+
+            return m;
         }
     }
 }

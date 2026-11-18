@@ -10,27 +10,51 @@ namespace Tonyo_sPizza.Services
     {
         private static StockService _instance;
         private readonly IngredientRepository _ingredientRepository;
+        private readonly StockTransactionRepository _stockTxRepository;
         private List<Ingredient> _originalStock;
         private List<Ingredient> _workingStock;
+        private bool _includeArchived = false;
 
         public static StockService Instance => _instance ?? (_instance = new StockService());
 
         public List<Ingredient> WorkingStock => _workingStock;
         public bool HasPendingChanges => CheckPendingChanges();
+        public bool IncludeArchived
+        {
+            get => _includeArchived;
+            set
+            {
+                if (_includeArchived != value)
+                {
+                    _includeArchived = value;
+                    ReloadFromDatabase();
+                }
+            }
+        }
 
         public event Action StockDataChanged;
 
         public StockService()
         {
             _ingredientRepository = new IngredientRepository();
+            _stockTxRepository = new StockTransactionRepository();
             ReloadFromDatabase();
         }
 
         public void ReloadFromDatabase()
         {
-            _originalStock = _ingredientRepository.GetAllIngredients();
-            _workingStock = _originalStock.Select(i => i.Clone()).ToList();
-            StockDataChanged?.Invoke();
+            try
+            {
+                _originalStock = _ingredientRepository.GetAllIngredients(_includeArchived);
+                _workingStock = _originalStock.Select(i => i.Clone()).ToList();
+                StockDataChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.Log(ex, "StockService.ReloadFromDatabase");
+                _originalStock = _originalStock ?? new List<Ingredient>();
+                _workingStock = _workingStock ?? new List<Ingredient>();
+            }
         }
 
         public void Restock(int ingredientId, decimal addQty)
@@ -41,6 +65,69 @@ namespace Tonyo_sPizza.Services
                 item.CurrentStock += addQty;
                 StockDataChanged?.Invoke();
             }
+        }
+
+        public bool RestockAtomic(int ingredientId, decimal addQty, string notes, out int createdTxId, out string errorMessage)
+        {
+            createdTxId = 0;
+            errorMessage = string.Empty;
+            try
+            {
+                AuthService.Instance.RequireRole("Admin", "Crew");
+                var user = AuthService.Instance.CurrentUser;
+                bool ok = _stockTxRepository.CreateRestockTransaction(
+                    ingredientId,
+                    addQty,
+                    user?.UserId,
+                    user?.Username ?? "Admin",
+                    notes,
+                    out createdTxId
+                );
+
+                if (ok)
+                {
+                    var ing = _ingredientRepository.GetIngredientById(ingredientId);
+                    AuditService.Instance.Log("Stock Restock", $"Restocked +{addQty:N2} {ing?.Unit} of '{ing?.Name}' (Tx #{createdTxId}).", "StockTransactions", createdTxId.ToString());
+                    ReloadFromDatabase();
+                    return true;
+                }
+                errorMessage = "Restock transaction failed.";
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.Log(ex, "StockService.RestockAtomic");
+                errorMessage = ex.Message;
+                return false;
+            }
+        }
+
+        public bool VoidStockTransaction(int stockTxId, byte[] rowVersion, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            try
+            {
+                AuthService.Instance.RequireRole("Admin");
+                if (_stockTxRepository.VoidStockTransaction(stockTxId, rowVersion))
+                {
+                    AuditService.Instance.Log("Stock Void", $"Voided Stock Transaction #{stockTxId} and reversed inventory quantities.", "StockTransactions", stockTxId.ToString());
+                    ReloadFromDatabase();
+                    return true;
+                }
+                errorMessage = "Failed to void stock transaction.";
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.Log(ex, "StockService.VoidStockTransaction");
+                errorMessage = ex.Message;
+                return false;
+            }
+        }
+
+        public List<StockTransaction> GetStockTransactions(DateTime? fromDate = null, DateTime? toDate = null, string status = "All", string search = null)
+        {
+            return _stockTxRepository.GetTransactions(fromDate, toDate, status, search);
         }
 
         public void UpdateWorkingItem(Ingredient modified)
@@ -62,18 +149,25 @@ namespace Tonyo_sPizza.Services
             errorMessage = string.Empty;
             try
             {
+                AuthService.Instance.RequireRole("Admin");
                 if (_ingredientRepository.IsIngredientInUse(ingredientId, out var usedInMenuNames))
                 {
-                    errorMessage = $"Cannot delete this ingredient because it is currently used by the following menu item(s):\n• " +
+                    errorMessage = $"Cannot permanently delete this ingredient because it is currently used by:\n• " +
                                    string.Join("\n• ", usedInMenuNames) +
-                                   "\n\nPlease remove it from those menu items first.";
+                                   "\n\nYou can Archive this ingredient instead or remove it from those menu items first.";
+                    return false;
+                }
+
+                if (_ingredientRepository.HasStockTransactions(ingredientId))
+                {
+                    errorMessage = "Cannot permanently delete this ingredient because it has recorded stock transactions.\nPlease Archive it instead to preserve inventory audit history.";
                     return false;
                 }
 
                 bool ok = _ingredientRepository.DeleteIngredient(ingredientId);
                 if (ok)
                 {
-                    AuditService.Instance.Log("Delete Ingredient", $"Ingredient #{ingredientId} deleted from inventory.");
+                    AuditService.Instance.Log("Delete Ingredient", $"Ingredient #{ingredientId} deleted from inventory.", "Ingredients", ingredientId.ToString());
                     ReloadFromDatabase();
                     return true;
                 }
@@ -82,6 +176,37 @@ namespace Tonyo_sPizza.Services
             }
             catch (Exception ex)
             {
+                ErrorLogger.Log(ex, "StockService.DeleteIngredient");
+                errorMessage = ex.Message;
+                return false;
+            }
+        }
+
+        public bool SetIngredientActiveStatus(int ingredientId, bool isActive, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            try
+            {
+                AuthService.Instance.RequireRole("Admin");
+                var ing = _ingredientRepository.GetIngredientById(ingredientId);
+                if (ing == null)
+                {
+                    errorMessage = "Ingredient not found.";
+                    return false;
+                }
+
+                if (_ingredientRepository.SetIngredientActiveStatus(ingredientId, isActive))
+                {
+                    AuditService.Instance.Log(isActive ? "Restore Ingredient" : "Archive Ingredient", $"Ingredient '{ing.Name}' set to {(isActive ? "Active" : "Archived")}.", "Ingredients", ingredientId.ToString());
+                    ReloadFromDatabase();
+                    return true;
+                }
+                errorMessage = "Could not update ingredient status.";
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.Log(ex, "StockService.SetIngredientActiveStatus");
                 errorMessage = ex.Message;
                 return false;
             }
@@ -92,10 +217,28 @@ namespace Tonyo_sPizza.Services
             errorMessage = string.Empty;
             try
             {
+                AuthService.Instance.RequireRole("Admin");
                 bool ok = _ingredientRepository.InsertIngredient(ingredient);
                 if (ok)
                 {
-                    AuditService.Instance.Log("Add Ingredient", $"Added new ingredient: {ingredient?.Name} ({ingredient?.CurrentStock} {ingredient?.Unit})");
+                    AuditService.Instance.Log("Add Ingredient", $"Added new ingredient: {ingredient?.Name} ({ingredient?.CurrentStock} {ingredient?.Unit})", "Ingredients", ingredient?.IngredientId.ToString());
+                    if (ingredient.CurrentStock > 0)
+                    {
+                        var u = AuthService.Instance.CurrentUser;
+                        var delta = new List<StockTransactionItem>
+                        {
+                            new StockTransactionItem
+                            {
+                                IngredientId = ingredient.IngredientId,
+                                IngredientName = ingredient.Name,
+                                QuantityChange = ingredient.CurrentStock,
+                                Unit = ingredient.Unit,
+                                StockBefore = 0m,
+                                StockAfter = ingredient.CurrentStock
+                            }
+                        };
+                        _stockTxRepository.RecordBatchAdjustmentTransaction(delta, u?.UserId, u?.Username ?? "Admin", $"Initial stock for {ingredient.Name}", out _);
+                    }
                     ReloadFromDatabase();
                     return true;
                 }
@@ -104,6 +247,7 @@ namespace Tonyo_sPizza.Services
             }
             catch (Exception ex)
             {
+                ErrorLogger.Log(ex, "StockService.AddNewIngredient");
                 errorMessage = ex.Message;
                 return false;
             }
@@ -114,10 +258,29 @@ namespace Tonyo_sPizza.Services
             errorMessage = string.Empty;
             try
             {
+                AuthService.Instance.RequireRole("Admin");
+                var orig = _originalStock?.FirstOrDefault(i => i.IngredientId == ingredient?.IngredientId);
                 bool ok = _ingredientRepository.UpdateIngredient(ingredient);
                 if (ok)
                 {
-                    AuditService.Instance.Log("Edit Ingredient", $"Updated ingredient parameters: {ingredient?.Name}");
+                    if (orig != null && orig.CurrentStock != ingredient.CurrentStock)
+                    {
+                        var u = AuthService.Instance.CurrentUser;
+                        var delta = new List<StockTransactionItem>
+                        {
+                            new StockTransactionItem
+                            {
+                                IngredientId = ingredient.IngredientId,
+                                IngredientName = ingredient.Name,
+                                QuantityChange = ingredient.CurrentStock - orig.CurrentStock,
+                                Unit = ingredient.Unit,
+                                StockBefore = orig.CurrentStock,
+                                StockAfter = ingredient.CurrentStock
+                            }
+                        };
+                        _stockTxRepository.RecordBatchAdjustmentTransaction(delta, u?.UserId, u?.Username ?? "Admin", $"Stock edited for {ingredient.Name}", out _);
+                    }
+                    AuditService.Instance.Log("Edit Ingredient", $"Updated ingredient parameters: {ingredient?.Name}", "Ingredients", ingredient?.IngredientId.ToString());
                     ReloadFromDatabase();
                     return true;
                 }
@@ -126,6 +289,7 @@ namespace Tonyo_sPizza.Services
             }
             catch (Exception ex)
             {
+                ErrorLogger.Log(ex, "StockService.UpdateIngredient");
                 errorMessage = ex.Message;
                 return false;
             }
@@ -143,10 +307,33 @@ namespace Tonyo_sPizza.Services
             errorMessage = string.Empty;
             try
             {
+                var deltas = new List<StockTransactionItem>();
+                foreach (var work in _workingStock)
+                {
+                    var orig = _originalStock?.FirstOrDefault(o => o.IngredientId == work.IngredientId);
+                    if (orig != null && work.CurrentStock != orig.CurrentStock)
+                    {
+                        deltas.Add(new StockTransactionItem
+                        {
+                            IngredientId = work.IngredientId,
+                            IngredientName = work.Name,
+                            QuantityChange = work.CurrentStock - orig.CurrentStock,
+                            Unit = work.Unit,
+                            StockBefore = orig.CurrentStock,
+                            StockAfter = work.CurrentStock
+                        });
+                    }
+                }
+
                 bool ok = _ingredientRepository.BatchSaveIngredients(_workingStock);
                 if (ok)
                 {
-                    AuditService.Instance.Log("Stock Update", "Batch updated inventory stock and parameters.");
+                    if (deltas.Count > 0)
+                    {
+                        var u = AuthService.Instance.CurrentUser;
+                        _stockTxRepository.RecordBatchAdjustmentTransaction(deltas, u?.UserId, u?.Username ?? "Admin", "Batch stock update", out _);
+                    }
+                    AuditService.Instance.Log("Stock Update", "Batch updated inventory stock and parameters.", "Ingredients");
                     ReloadFromDatabase();
                     return true;
                 }
@@ -155,6 +342,7 @@ namespace Tonyo_sPizza.Services
             }
             catch (Exception ex)
             {
+                ErrorLogger.Log(ex, "StockService.SaveChanges");
                 errorMessage = ex.Message;
                 return false;
             }

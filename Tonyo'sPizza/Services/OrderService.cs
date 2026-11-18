@@ -18,6 +18,7 @@ namespace Tonyo_sPizza.Services
         public static OrderService Instance => _instance ?? (_instance = new OrderService());
 
         public List<OrderItem> Cart => _cart;
+        public Order LastPlacedOrder { get; private set; }
         public decimal ServiceFee => _cart.Count > 0 ? _serviceFee : 0m;
         public decimal DiscountAmount => _discountAmount;
 
@@ -192,8 +193,8 @@ namespace Tonyo_sPizza.Services
 
                 Order order = new Order
                 {
-                    CustomerId = customer?.UserId,
-                    CustomerName = customer != null ? customer.FullName : "Walk-in Guest",
+                    CustomerId = (customer != null && customer.UserId > 0) ? (int?)customer.UserId : null,
+                    CustomerName = customer != null && !string.IsNullOrWhiteSpace(customer.FullName) ? customer.FullName : "Walk-in Guest",
                     Phone = phone,
                     Address = address,
                     TotalAmount = orderTotal,
@@ -206,7 +207,8 @@ namespace Tonyo_sPizza.Services
                 bool ok = _orderRepository.CreateOrder(order);
                 if (ok)
                 {
-                    AuditService.Instance.Log("Create Order", $"Order #{order.OrderId} placed for {order.CustomerName} - Total: ₱{order.TotalAmount:N2}");
+                    LastPlacedOrder = order;
+                    AuditService.Instance.Log("Create Order", $"Order #{order.OrderId} placed for {order.CustomerName} - Total: ₱{order.TotalAmount:N2}", "Orders", order.OrderId.ToString());
                     // Remove only the items that were ordered
                     foreach (var itm in itemsToOrder.ToList())
                     {

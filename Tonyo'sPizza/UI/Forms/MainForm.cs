@@ -21,6 +21,7 @@ namespace Tonyo_sPizza.UI.Forms
         private Panel _pnlSidebar;
         private Panel _pnlContent;
         private TextBox _txtGlobalSearch;
+        private RoundedPanel _pnlSearch;
         private Label _lblUserName;
         private Label _lblUserRole;
         private RoundedButton _btnDb;
@@ -29,6 +30,7 @@ namespace Tonyo_sPizza.UI.Forms
         private FlowLayoutPanel _flpNavButtons;
 
         // View Instances
+        private AdminDashboardControl _adminDashboardControl;
         private CustomerMenuControl _customerMenuControl;
         private CustomerOrdersControl _customerOrdersControl;
         private CrewQueueControl _crewQueueControl;
@@ -39,8 +41,9 @@ namespace Tonyo_sPizza.UI.Forms
         private AdminAuditControl _adminAuditControl;
         private AdminPromoControl _adminPromoControl;
         private AdminSalesReportControl _adminSalesControl;
+        private AdminBackupControl _adminBackupControl;
 
-        private string _activeTab = "Menu";
+        private string _activeTab = "Dashboard";
 
         public MainForm()
         {
@@ -51,24 +54,22 @@ namespace Tonyo_sPizza.UI.Forms
 
         private void InitializeComponent()
         {
-            Text = "Tonyo's Pizza - Restaurant Management System";
-            Size = new Size(1300, 850);
-            MinimumSize = new Size(1100, 720);
+            Text = "Tonyo's Pizza - Restaurant & Kitchen Management";
+            Size = new Size(1340, 860);
+            MinimumSize = new Size(1120, 720);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = AppColors.Background;
+            DoubleBuffered = true;
 
-            // 1. Top Header
             BuildHeader();
-
-            // 2. Left Sidebar
             BuildSidebar();
 
-            // 3. Main Dynamic Content Container
             _pnlContent = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = AppColors.Background
             };
+            UIHelper.EnableDoubleBuffering(_pnlContent);
 
             Controls.Add(_pnlContent);
             Controls.Add(_pnlSidebar);
@@ -82,64 +83,88 @@ namespace Tonyo_sPizza.UI.Forms
                 Dock = DockStyle.Top,
                 Height = 70,
                 BackColor = Color.White,
-                Padding = new Padding(24, 12, 24, 12)
+                Padding = new Padding(20, 12, 24, 12)
             };
 
-            // Bottom border line for header
             _pnlHeader.Paint += (s, e) =>
             {
+                UIHelper.SetHighQuality(e.Graphics);
                 using (Pen pen = new Pen(AppColors.Border))
                 {
                     e.Graphics.DrawLine(pen, 0, _pnlHeader.Height - 1, _pnlHeader.Width, _pnlHeader.Height - 1);
                 }
             };
 
-            // Brand Logo (GoFood Style)
+            // Artisanal Brand Mark
+            Panel pnlBrand = new Panel
+            {
+                Location = new Point(16, 10),
+                Size = new Size(256, 52),
+                BackColor = Color.White
+            };
+            pnlBrand.Paint += (s, e) =>
+            {
+                UIHelper.SetHighQuality(e.Graphics);
+                using (var b = new SolidBrush(AppColors.Primary))
+                {
+                    e.Graphics.FillEllipse(b, 0, 8, 34, 34);
+                }
+                UIHelper.DrawVectorIcon(e.Graphics, "pizza", new Rectangle(7, 15, 20, 20), Color.White);
+            };
+
             Label lblBrand = new Label
             {
-                Text = "GoFood.",
-                Font = new Font("Segoe UI Black", 18f, FontStyle.Bold),
-                ForeColor = AppColors.Primary,
-                Location = new Point(20, 16),
-                AutoSize = true
+                Text = "Tonyo's Pizza",
+                Font = new Font("Segoe UI", 14f, FontStyle.Bold),
+                ForeColor = AppColors.TextDark,
+                Location = new Point(42, 3),
+                Size = new Size(206, 26),
+                UseMnemonic = false,
+                BackColor = Color.Transparent
             };
 
             Label lblSubBrand = new Label
             {
-                Text = "by Tonyo's Pizza",
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Italic),
+                Text = "Brick-Oven Kitchen & POS",
+                Font = new Font("Segoe UI", 8.25f),
                 ForeColor = AppColors.TextMuted,
-                Location = new Point(140, 24),
-                AutoSize = true
+                Location = new Point(43, 30),
+                Size = new Size(206, 18),
+                UseMnemonic = false,
+                BackColor = Color.Transparent
             };
 
-            // Search Bar (Center/Left)
-            RoundedPanel pnlSearch = new RoundedPanel
+            pnlBrand.Controls.Add(lblSubBrand);
+            pnlBrand.Controls.Add(lblBrand);
+
+            // Clean Search Bar (active for Customer Menu)
+            _pnlSearch = new RoundedPanel
             {
-                Location = new Point(280, 14),
-                Size = new Size(360, 42),
+                Location = new Point(275, 15),
+                Size = new Size(340, 40),
                 BorderRadius = 10,
                 BackColor = AppColors.Background,
                 BorderColor = AppColors.Border,
-                DrawBorder = true,
-                Padding = new Padding(12, 8, 12, 8)
+                DrawBorder = true
             };
 
             Label lblSearchIcon = new Label
             {
-                Text = "Search:",
-                Font = new Font("Segoe UI Semibold", 9f, FontStyle.Bold),
-                ForeColor = AppColors.TextMuted,
-                Location = new Point(8, 10),
-                Size = new Size(52, 20),
+                Location = new Point(12, 12),
+                Size = new Size(16, 16),
                 BackColor = Color.Transparent
+            };
+            lblSearchIcon.Paint += (s, e) =>
+            {
+                UIHelper.SetHighQuality(e.Graphics);
+                UIHelper.DrawVectorIcon(e.Graphics, "search", new Rectangle(0, 0, 15, 15), AppColors.TextLight);
             };
 
             _txtGlobalSearch = new TextBox
             {
-                Location = new Point(62, 10),
-                Width = 280,
-                Font = new Font("Segoe UI", 10f),
+                Location = new Point(36, 11),
+                Width = 288,
+                Font = new Font("Segoe UI", 9.75f),
                 BorderStyle = BorderStyle.None,
                 BackColor = AppColors.Background,
                 ForeColor = AppColors.TextDark
@@ -152,26 +177,27 @@ namespace Tonyo_sPizza.UI.Forms
                 }
             };
 
-            pnlSearch.Controls.Add(_txtGlobalSearch);
-            pnlSearch.Controls.Add(lblSearchIcon);
+            _pnlSearch.Controls.Add(_txtGlobalSearch);
+            _pnlSearch.Controls.Add(lblSearchIcon);
 
-            // Right User Profile & Action Chip
+            // Right User Profile & Actions
             Panel pnlRight = new Panel
             {
                 Dock = DockStyle.Right,
-                Width = 470,
+                Width = 450,
                 Height = 46,
-                BackColor = Color.Transparent
+                BackColor = Color.White
             };
 
             _btnDb = new RoundedButton
             {
                 Text = "DB Settings",
-                Location = new Point(70, 4),
-                Size = new Size(95, 38),
+                Location = new Point(42, 4),
+                Size = new Size(102, 38),
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(241, 245, 249),
-                HoverColor = Color.FromArgb(226, 232, 240),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                PressedColor = AppColors.SecondaryPressed,
                 ForeColor = AppColors.TextMedium,
                 CustomBorderColor = AppColors.Border,
                 CustomBorderWidth = 1,
@@ -179,30 +205,38 @@ namespace Tonyo_sPizza.UI.Forms
             };
             _btnDb.Click += (s, e) =>
             {
-                using (var dlg = new DbConnectionDialog())
+                try
                 {
-                    dlg.ShowDialog();
+                    AuthService.Instance.RequireRole("Admin", "Crew");
+                    using (var dlg = new DbConnectionDialog())
+                    {
+                        dlg.ShowDialog(this);
+                    }
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    MessageBox.Show(this, ex.Message, "Access Restricted", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             };
 
             RoundedButton btnLogout = new RoundedButton
             {
-                Text = "Logout",
-                Location = new Point(174, 4),
-                Size = new Size(85, 38),
+                Text = "Sign Out",
+                Location = new Point(152, 4),
+                Size = new Size(88, 38),
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(254, 226, 226),
+                NormalColor = AppColors.StatusCancelledBg,
                 HoverColor = Color.FromArgb(254, 205, 205),
+                PressedColor = Color.FromArgb(252, 165, 165),
                 ForeColor = AppColors.StatusCancelled,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold)
             };
             btnLogout.Click += (s, e) => Logout();
 
-            // User Info Badge
             RoundedPanel pnlUser = new RoundedPanel
             {
-                Location = new Point(268, 2),
-                Size = new Size(195, 42),
+                Location = new Point(248, 2),
+                Size = new Size(198, 42),
                 BorderRadius = 10,
                 BackColor = AppColors.PrimarySoft,
                 BorderColor = AppColors.PrimaryBorder,
@@ -212,10 +246,10 @@ namespace Tonyo_sPizza.UI.Forms
             _lblUserName = new Label
             {
                 Text = _authService.CurrentUser?.FullName ?? "Guest User",
-                Font = new Font("Segoe UI Bold", 9.5f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 9.25f, FontStyle.Bold),
                 ForeColor = AppColors.PrimaryDark,
-                Location = new Point(8, 4),
-                Size = new Size(180, 18),
+                Location = new Point(10, 4),
+                Size = new Size(178, 18),
                 AutoEllipsis = true,
                 BackColor = Color.Transparent
             };
@@ -225,8 +259,8 @@ namespace Tonyo_sPizza.UI.Forms
                 Text = $"Role: {_authService.CurrentUser?.Role ?? "Customer"}",
                 Font = new Font("Segoe UI", 8f),
                 ForeColor = AppColors.TextMuted,
-                Location = new Point(8, 22),
-                Size = new Size(180, 16),
+                Location = new Point(10, 22),
+                Size = new Size(178, 16),
                 BackColor = Color.Transparent
             };
 
@@ -237,9 +271,8 @@ namespace Tonyo_sPizza.UI.Forms
             pnlRight.Controls.Add(btnLogout);
             pnlRight.Controls.Add(pnlUser);
 
-            _pnlHeader.Controls.Add(lblBrand);
-            _pnlHeader.Controls.Add(lblSubBrand);
-            _pnlHeader.Controls.Add(pnlSearch);
+            _pnlHeader.Controls.Add(pnlBrand);
+            _pnlHeader.Controls.Add(_pnlSearch);
             _pnlHeader.Controls.Add(pnlRight);
         }
 
@@ -248,12 +281,11 @@ namespace Tonyo_sPizza.UI.Forms
             _pnlSidebar = new Panel
             {
                 Dock = DockStyle.Left,
-                Width = 200,
+                Width = 216,
                 BackColor = Color.White,
-                Padding = new Padding(12, 16, 12, 16)
+                Padding = new Padding(12, 14, 12, 14)
             };
 
-            // Divider border on right
             _pnlSidebar.Paint += (s, e) =>
             {
                 using (Pen pen = new Pen(AppColors.Border))
@@ -267,8 +299,10 @@ namespace Tonyo_sPizza.UI.Forms
                 Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
-                BackColor = Color.Transparent
+                AutoScroll = true,
+                BackColor = Color.White
             };
+            UIHelper.EnableDoubleBuffering(_flpNavButtons);
 
             _pnlSidebar.Controls.Add(_flpNavButtons);
         }
@@ -281,37 +315,130 @@ namespace Tonyo_sPizza.UI.Forms
             if (user == null) return;
 
             _lblUserName.Text = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.Username;
-            _lblUserRole.Text = $"Role: {user.Role}";
+            _lblUserRole.Text = user.IsGuestAccount ? "Self-Order Kiosk" : $"Role: {user.Role}";
 
             if (_btnDb != null)
             {
-                _btnDb.Visible = !user.IsCustomer;
+                _btnDb.Visible = user.IsAdmin;
+            }
+
+            if (_pnlSearch != null)
+            {
+                _pnlSearch.Visible = !user.IsGuestAccount;
+            }
+
+            if (_pnlSidebar != null)
+            {
+                _pnlSidebar.Visible = !user.IsGuestAccount;
             }
 
             if (user.IsAdmin)
             {
-                AddNavButton("Stock Tracking", "Stock Tracking", "stock", () => ShowView(GetOrCreateAdminStockView()));
-                AddNavButton("Menu Management", "Food Menu", "menu", () => ShowView(GetOrCreateAdminMenuView()));
-                AddNavButton("Categories", "Categories", "category", () => ShowView(GetOrCreateAdminCategoryView()));
-                AddNavButton("Promo Vouchers", "Promo Vouchers", "promo", () => ShowView(GetOrCreateAdminPromoView()));
-                AddNavButton("Sales Report", "Sales Report", "report", () => ShowView(GetOrCreateAdminSalesView()));
-                AddNavButton("User Management", "User Management", "users", () => ShowView(GetOrCreateAdminUsersView()));
-                AddNavButton("Kitchen Queue", "Kitchen Queue", "kitchen", () => ShowView(GetOrCreateCrewQueueView()));
-                AddNavButton("Audit Logs", "Audit Logs", "orders", () => ShowView(GetOrCreateAdminAuditView()));
-                AddNavButton("Customer Menu", "Customer View", "cart", () => ShowView(GetOrCreateCustomerMenuView()));
+                AddNavButton("Dashboard", "Dashboard", "dashboard", () => NavigateToTab("Dashboard"));
+                AddNavButton("Stock Tracking", "Stock & Restock", "stock", () => NavigateToTab("Stock Tracking"));
+                AddNavButton("Menu Management", "Food Menu", "menu", () => NavigateToTab("Menu Management"));
+                AddNavButton("Categories", "Categories", "category", () => NavigateToTab("Categories"));
+                AddNavButton("Promo Vouchers", "Promo Vouchers", "promo", () => NavigateToTab("Promo Vouchers"));
+                AddNavButton("Sales Report", "Sales Report", "report", () => NavigateToTab("Sales Report"));
+                AddNavButton("User Management", "User Accounts", "users", () => NavigateToTab("User Management"));
+                AddNavButton("Kitchen Queue", "Kitchen Queue", "kitchen", () => NavigateToTab("Kitchen Queue"));
+                AddNavButton("Audit Logs", "Audit Trail", "orders", () => NavigateToTab("Audit Logs"));
+                AddNavButton("Backup & Restore", "Backup & Restore", "backup", () => NavigateToTab("Backup & Restore"));
+                AddNavButton("Customer Menu", "Order Kiosk", "cart", () => NavigateToTab("Customer Menu"));
 
-                ShowView(GetOrCreateAdminStockView());
+                NavigateToTab("Dashboard");
             }
             else if (user.IsCrew)
             {
-                AddNavButton("Kitchen Queue", "Kitchen Queue", "kitchen", () => ShowView(GetOrCreateCrewQueueView()));
-                ShowView(GetOrCreateCrewQueueView());
+                AddNavButton("Kitchen Queue", "Kitchen Queue", "kitchen", () => NavigateToTab("Kitchen Queue"));
+                NavigateToTab("Kitchen Queue");
             }
-            else // Customer
+            else if (user.IsGuestAccount)
             {
-                AddNavButton("Menu", "Menu & Order", "menu", () => ShowView(GetOrCreateCustomerMenuView()));
-                AddNavButton("Orders", "My Orders", "orders", () => ShowView(GetOrCreateCustomerOrdersView()));
-                ShowView(GetOrCreateCustomerMenuView());
+                AddNavButton("Menu", "Order Kiosk", "cart", () => NavigateToTab("Menu"));
+                NavigateToTab("Menu");
+            }
+            else // Registered Customer
+            {
+                AddNavButton("Menu", "Menu & Order", "menu", () => NavigateToTab("Menu"));
+                AddNavButton("Orders", "My Orders", "orders", () => NavigateToTab("Orders"));
+                NavigateToTab("Menu");
+            }
+        }
+
+        public void NavigateToTab(string tabKey)
+        {
+            try
+            {
+                User user = _authService.CurrentUser;
+                if (user == null) return;
+
+                Control targetView = null;
+                switch (tabKey)
+                {
+                    case "Dashboard":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminDashboardView();
+                        break;
+                    case "Stock Tracking":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminStockView();
+                        break;
+                    case "Menu Management":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminMenuView();
+                        break;
+                    case "Categories":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminCategoryView();
+                        break;
+                    case "Promo Vouchers":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminPromoView();
+                        break;
+                    case "Sales Report":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminSalesView();
+                        break;
+                    case "User Management":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminUsersView();
+                        break;
+                    case "Audit Logs":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminAuditView();
+                        break;
+                    case "Backup & Restore":
+                        AuthService.Instance.RequireRole("Admin");
+                        targetView = GetOrCreateAdminBackupView();
+                        break;
+                    case "Kitchen Queue":
+                        AuthService.Instance.RequireRole("Admin", "Crew");
+                        targetView = GetOrCreateCrewQueueView();
+                        break;
+                    case "Customer Menu":
+                    case "Menu":
+                        targetView = GetOrCreateCustomerMenuView();
+                        break;
+                    case "Orders":
+                        targetView = GetOrCreateCustomerOrdersView();
+                        break;
+                }
+
+                if (targetView != null)
+                {
+                    _activeTab = tabKey;
+                    HighlightActiveNavButton();
+                    ShowView(targetView);
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(this, ex.Message, "Role Permission Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.ShowFriendlyError("Unable to open the selected view.", ex, "Navigation Error", this);
             }
         }
 
@@ -322,19 +449,18 @@ namespace Tonyo_sPizza.UI.Forms
                 Text = title,
                 Tag = tabKey,
                 IconName = iconName,
-                Size = new Size(184, 46),
-                BorderRadius = 10,
-                Font = new Font("Segoe UI Semibold", 10f, FontStyle.Bold),
-                Margin = new Padding(0, 0, 0, 8),
-                Cursor = Cursors.Hand
+                Size = new Size(190, 42),
+                BorderRadius = 9,
+                Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold),
+                Margin = new Padding(0, 0, 0, 6),
+                Cursor = Cursors.Hand,
+                NormalColor = Color.White,
+                HoverColor = AppColors.Background,
+                PressedColor = AppColors.PrimarySoft,
+                ForeColor = AppColors.TextMedium
             };
 
-            btn.Click += (s, e) =>
-            {
-                _activeTab = tabKey;
-                HighlightActiveNavButton();
-                onClick();
-            };
+            btn.Click += (s, e) => onClick();
 
             _flpNavButtons.Controls.Add(btn);
             HighlightActiveNavButton();
@@ -350,16 +476,20 @@ namespace Tonyo_sPizza.UI.Forms
                     if (isActive)
                     {
                         btn.NormalColor = AppColors.PrimarySoft;
+                        btn.HoverColor = AppColors.PrimarySoft;
                         btn.ForeColor = AppColors.PrimaryDark;
                         btn.CustomBorderColor = AppColors.PrimaryBorder;
                         btn.CustomBorderWidth = 1;
+                        btn.ShowActiveAccentBar = true;
                     }
                     else
                     {
                         btn.NormalColor = Color.White;
+                        btn.HoverColor = AppColors.Background;
                         btn.ForeColor = AppColors.TextMedium;
                         btn.CustomBorderColor = Color.Transparent;
                         btn.CustomBorderWidth = 0;
+                        btn.ShowActiveAccentBar = false;
                     }
                     btn.Invalidate();
                 }
@@ -375,11 +505,36 @@ namespace Tonyo_sPizza.UI.Forms
             _pnlContent.ResumeLayout(true);
         }
 
+        private Control GetOrCreateAdminDashboardView()
+        {
+            if (_adminDashboardControl == null)
+            {
+                _adminDashboardControl = new AdminDashboardControl();
+                _adminDashboardControl.NavigateRequested += (tabKey) => NavigateToTab(tabKey);
+            }
+            else
+            {
+                _adminDashboardControl.RefreshDashboard();
+            }
+            return _adminDashboardControl;
+        }
+
         private Control GetOrCreateCustomerMenuView()
         {
             if (_customerMenuControl == null)
             {
                 _customerMenuControl = new CustomerMenuControl();
+                _customerMenuControl.KioskBrowsingChanged += (isBrowsing) =>
+                {
+                    if (_pnlSearch != null && _authService?.CurrentUser?.IsGuestAccount == true)
+                    {
+                        _pnlSearch.Visible = isBrowsing;
+                        if (!isBrowsing && _txtGlobalSearch != null)
+                        {
+                            _txtGlobalSearch.Text = string.Empty;
+                        }
+                    }
+                };
             }
             else
             {
@@ -387,6 +542,7 @@ namespace Tonyo_sPizza.UI.Forms
                 _customerMenuControl.LoadMenuItems();
                 _customerMenuControl.RefreshCartView();
             }
+            _customerMenuControl.InitializeForCurrentUser();
             return _customerMenuControl;
         }
 
@@ -504,12 +660,26 @@ namespace Tonyo_sPizza.UI.Forms
             return _adminSalesControl;
         }
 
+        private Control GetOrCreateAdminBackupView()
+        {
+            if (_adminBackupControl == null)
+            {
+                _adminBackupControl = new AdminBackupControl();
+            }
+            else
+            {
+                _adminBackupControl.LoadBackupData();
+            }
+            return _adminBackupControl;
+        }
+
         private void Logout()
         {
-            if (MessageBox.Show("Are you sure you want to log out?", "Logout", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (MessageBox.Show(this, "Are you sure you want to sign out?", "Sign Out", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 _authService.Logout();
                 OrderService.Instance.ClearCart();
+                _adminDashboardControl = null;
                 _customerMenuControl = null;
                 _customerOrdersControl = null;
                 _crewQueueControl = null;
@@ -517,6 +687,10 @@ namespace Tonyo_sPizza.UI.Forms
                 _adminMenuControl = null;
                 _adminCategoryControl = null;
                 _adminUsersControl = null;
+                _adminAuditControl = null;
+                _adminPromoControl = null;
+                _adminSalesControl = null;
+                _adminBackupControl = null;
 
                 Hide();
                 using (var login = new LoginForm())

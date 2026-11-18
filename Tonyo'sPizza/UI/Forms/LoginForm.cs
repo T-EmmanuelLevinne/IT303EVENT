@@ -24,6 +24,7 @@ namespace Tonyo_sPizza.UI.Forms
         private ModernInputField _txtLoginUsername;
         private ModernInputField _txtLoginPassword;
         private RoundedButton _btnLogin;
+        private RoundedButton _btnGuestKiosk;
 
         // Register Controls
         private RoundedButton _btnBackToLogin;
@@ -48,7 +49,8 @@ namespace Tonyo_sPizza.UI.Forms
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
-            BackColor = Color.FromArgb(248, 250, 252);
+            BackColor = AppColors.Background;
+            DoubleBuffered = true;
 
             // 1. Top Brand Header Area
             _pnlHeader = new Panel
@@ -133,7 +135,7 @@ namespace Tonyo_sPizza.UI.Forms
                 Location = new Point(24, y),
                 Size = new Size(356, 38),
                 BorderRadius = 8,
-                BackColor = Color.FromArgb(241, 245, 249),
+                BackColor = AppColors.SurfaceAlt,
                 BorderWidth = 0
             };
 
@@ -144,8 +146,9 @@ namespace Tonyo_sPizza.UI.Forms
                 Size = new Size(173, 32),
                 BorderRadius = 6,
                 NormalColor = Color.White,
+                HoverColor = Color.White,
                 ForeColor = AppColors.PrimaryDark,
-                Font = new Font("Segoe UI Bold", 9.5f, FontStyle.Bold),
+                Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
             _btnTabSignIn.Click += (s, e) => ShowLoginView();
@@ -156,7 +159,8 @@ namespace Tonyo_sPizza.UI.Forms
                 Location = new Point(180, 3),
                 Size = new Size(173, 32),
                 BorderRadius = 6,
-                NormalColor = Color.Transparent,
+                NormalColor = AppColors.SurfaceAlt,
+                HoverColor = AppColors.SecondaryHover,
                 ForeColor = AppColors.TextMedium,
                 Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand
@@ -271,6 +275,33 @@ namespace Tonyo_sPizza.UI.Forms
             pnlQuickRoles.Controls.Add(btnDemoAdmin);
             pnlQuickRoles.Controls.Add(btnDemoCrew);
             pnlQuickRoles.Controls.Add(btnDemoCustomer);
+            y += 38;
+
+            Panel pnlGuestDivider = new Panel
+            {
+                Location = new Point(24, y),
+                Size = new Size(356, 1),
+                BackColor = AppColors.Border
+            };
+            y += 12;
+
+            _btnGuestKiosk = new RoundedButton
+            {
+                Text = "Order as Guest (Self-Service Kiosk)",
+                IconName = "cart",
+                Location = new Point(24, y),
+                Size = new Size(356, 42),
+                BorderRadius = 8,
+                NormalColor = AppColors.PrimarySoft,
+                HoverColor = AppColors.PrimaryBorder,
+                PressedColor = AppColors.PrimaryBorder,
+                CustomBorderColor = AppColors.PrimaryBorder,
+                CustomBorderWidth = 1,
+                ForeColor = AppColors.PrimaryDark,
+                Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            _btnGuestKiosk.Click += BtnGuestKiosk_Click;
 
             _pnlLoginContent.Controls.Add(lblHeading);
             _pnlLoginContent.Controls.Add(lblSub);
@@ -280,6 +311,8 @@ namespace Tonyo_sPizza.UI.Forms
             _pnlLoginContent.Controls.Add(_txtLoginPassword);
             _pnlLoginContent.Controls.Add(_btnLogin);
             _pnlLoginContent.Controls.Add(pnlQuickRoles);
+            _pnlLoginContent.Controls.Add(pnlGuestDivider);
+            _pnlLoginContent.Controls.Add(_btnGuestKiosk);
         }
 
         private RoundedButton CreateDemoChip(string text, string user, string pass, int x)
@@ -481,8 +514,8 @@ namespace Tonyo_sPizza.UI.Forms
         private void ShowLoginView()
         {
             ActiveView = "Login";
-            _pnlCard.Height = 395;
-            ClientSize = new Size(460, 520);
+            _pnlCard.Height = 456;
+            ClientSize = new Size(460, 580);
 
             _pnlRegisterContent.Visible = false;
             _pnlLoginContent.Visible = true;
@@ -490,9 +523,10 @@ namespace Tonyo_sPizza.UI.Forms
 
             _btnTabSignIn.NormalColor = Color.White;
             _btnTabSignIn.ForeColor = AppColors.PrimaryDark;
-            _btnTabCreateAccount.NormalColor = Color.Transparent;
+            _btnTabCreateAccount.NormalColor = AppColors.SurfaceAlt;
             _btnTabCreateAccount.ForeColor = AppColors.TextMedium;
 
+            AcceptButton = _btnLogin;
             _pnlHeader.Invalidate();
         }
 
@@ -508,9 +542,10 @@ namespace Tonyo_sPizza.UI.Forms
 
             _btnTabCreateAccount.NormalColor = Color.White;
             _btnTabCreateAccount.ForeColor = AppColors.PrimaryDark;
-            _btnTabSignIn.NormalColor = Color.Transparent;
+            _btnTabSignIn.NormalColor = AppColors.SurfaceAlt;
             _btnTabSignIn.ForeColor = AppColors.TextMedium;
 
+            AcceptButton = _btnRegister;
             _pnlHeader.Invalidate();
         }
 
@@ -533,6 +568,19 @@ namespace Tonyo_sPizza.UI.Forms
             else
             {
                 MessageBox.Show($"Login Failed: {err}\n\nTip: Please check your credentials or select a quick demo account below.", "Authentication Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnGuestKiosk_Click(object sender, EventArgs e)
+        {
+            if (_authService.LoginAsGuest(out string err))
+            {
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            else
+            {
+                MessageBox.Show(err, "Guest Kiosk Unavailable", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 

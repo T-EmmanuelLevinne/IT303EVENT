@@ -8,10 +8,13 @@ namespace Tonyo_sPizza.Data.Repositories
 {
     public class IngredientRepository
     {
-        public List<Ingredient> GetAllIngredients()
+        public List<Ingredient> GetAllIngredients(bool includeArchived = false)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             List<Ingredient> list = new List<Ingredient>();
-            string sql = "SELECT * FROM Ingredients ORDER BY Name ASC";
+            string sql = includeArchived
+                ? "SELECT * FROM Ingredients ORDER BY IsActive DESC, Name ASC"
+                : "SELECT * FROM Ingredients WHERE ISNULL(IsActive, 1) = 1 ORDER BY Name ASC";
             DataTable dt = DatabaseHelper.ExecuteQuery(sql);
             foreach (DataRow row in dt.Rows)
             {
@@ -22,6 +25,7 @@ namespace Tonyo_sPizza.Data.Repositories
 
         public Ingredient GetIngredientById(int ingredientId)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             string sql = "SELECT * FROM Ingredients WHERE IngredientId = @IngredientId";
             SqlParameter[] parameters = {
                 new SqlParameter("@IngredientId", SqlDbType.Int) { Value = ingredientId }
@@ -57,13 +61,14 @@ namespace Tonyo_sPizza.Data.Repositories
 
         public bool InsertIngredient(Ingredient ingredient)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             if (IngredientNameExists(ingredient.Name))
             {
                 throw new InvalidOperationException("An ingredient with this name already exists.");
             }
 
-            string sql = @"INSERT INTO Ingredients (CategoryId, CategoryName, Name, CurrentStock, Unit, MinThreshold, CostPerUnit, CreatedAt)
-                           VALUES (@CategoryId, @CategoryName, @Name, @CurrentStock, @Unit, @MinThreshold, @CostPerUnit, @CreatedAt);
+            string sql = @"INSERT INTO Ingredients (CategoryId, CategoryName, Name, CurrentStock, Unit, MinThreshold, CostPerUnit, IsActive, CreatedAt)
+                           VALUES (@CategoryId, @CategoryName, @Name, @CurrentStock, @Unit, @MinThreshold, @CostPerUnit, @IsActive, @CreatedAt);
                            SELECT SCOPE_IDENTITY();";
 
             SqlParameter[] parameters = {
@@ -74,6 +79,7 @@ namespace Tonyo_sPizza.Data.Repositories
                 new SqlParameter("@Unit", SqlDbType.NVarChar, 20) { Value = ingredient.Unit },
                 new SqlParameter("@MinThreshold", SqlDbType.Decimal) { Value = ingredient.MinThreshold },
                 new SqlParameter("@CostPerUnit", SqlDbType.Decimal) { Value = ingredient.CostPerUnit },
+                new SqlParameter("@IsActive", SqlDbType.Bit) { Value = ingredient.IsActive },
                 new SqlParameter("@CreatedAt", SqlDbType.DateTime) { Value = ingredient.CreatedAt }
             };
 
@@ -81,6 +87,8 @@ namespace Tonyo_sPizza.Data.Repositories
             if (res != null && res != DBNull.Value)
             {
                 ingredient.IngredientId = Convert.ToInt32(res);
+                var fresh = GetIngredientById(ingredient.IngredientId);
+                if (fresh != null) ingredient.RowVersion = fresh.RowVersion;
                 return true;
             }
             return false;
@@ -88,6 +96,7 @@ namespace Tonyo_sPizza.Data.Repositories
 
         public bool UpdateIngredient(Ingredient ingredient)
         {
+            DatabaseHelper.EnsureSchemaUpgrades();
             if (IngredientNameExists(ingredient.Name, ingredient.IngredientId))
             {
                 throw new InvalidOperationException("Another ingredient with this name already exists.");
@@ -96,10 +105,10 @@ namespace Tonyo_sPizza.Data.Repositories
             string sql = @"UPDATE Ingredients 
                            SET CategoryId = @CategoryId, CategoryName = @CategoryName, Name = @Name, 
                                CurrentStock = @CurrentStock, Unit = @Unit, 
-                               MinThreshold = @MinThreshold, CostPerUnit = @CostPerUnit
+                               MinThreshold = @MinThreshold, CostPerUnit = @CostPerUnit, IsActive = @IsActive
                            WHERE IngredientId = @IngredientId";
 
-            SqlParameter[] parameters = {
+            var parameters = new List<SqlParameter> {
                 new SqlParameter("@CategoryId", SqlDbType.Int) { Value = (object)ingredient.CategoryId ?? DBNull.Value },
                 new SqlParameter("@CategoryName", SqlDbType.NVarChar, 50) { Value = ingredient.CategoryName ?? "General" },
                 new SqlParameter("@Name", SqlDbType.NVarChar, 100) { Value = ingredient.Name },
@@ -107,9 +116,35 @@ namespace Tonyo_sPizza.Data.Repositories
                 new SqlParameter("@Unit", SqlDbType.NVarChar, 20) { Value = ingredient.Unit },
                 new SqlParameter("@MinThreshold", SqlDbType.Decimal) { Value = ingredient.MinThreshold },
                 new SqlParameter("@CostPerUnit", SqlDbType.Decimal) { Value = ingredient.CostPerUnit },
+                new SqlParameter("@IsActive", SqlDbType.Bit) { Value = ingredient.IsActive },
                 new SqlParameter("@IngredientId", SqlDbType.Int) { Value = ingredient.IngredientId }
             };
 
+            if (ingredient.RowVersion != null && ingredient.RowVersion.Length == 8)
+            {
+                sql += " AND RowVersion = @RowVersion";
+                parameters.Add(new SqlParameter("@RowVersion", SqlDbType.Timestamp) { Value = ingredient.RowVersion });
+            }
+
+            int rows = DatabaseHelper.ExecuteNonQuery(sql, parameters.ToArray());
+            if (rows == 0 && ingredient.RowVersion != null)
+            {
+                if (GetIngredientById(ingredient.IngredientId) != null)
+                {
+                    throw new DBConcurrencyException($"'{ingredient.Name}' was updated by another user. Please refresh the inventory list before saving.");
+                }
+            }
+            return rows > 0;
+        }
+
+        public bool SetIngredientActiveStatus(int ingredientId, bool isActive)
+        {
+            DatabaseHelper.EnsureSchemaUpgrades();
+            string sql = "UPDATE Ingredients SET IsActive = @IsActive WHERE IngredientId = @IngredientId";
+            SqlParameter[] parameters = {
+                new SqlParameter("@IsActive", SqlDbType.Bit) { Value = isActive },
+                new SqlParameter("@IngredientId", SqlDbType.Int) { Value = ingredientId }
+            };
             return DatabaseHelper.ExecuteNonQuery(sql, parameters) > 0;
         }
 
@@ -161,6 +196,17 @@ namespace Tonyo_sPizza.Data.Repositories
             return usedInMenuNames.Count > 0;
         }
 
+        public bool HasStockTransactions(int ingredientId)
+        {
+            DatabaseHelper.EnsureSchemaUpgrades();
+            string sql = "SELECT COUNT(*) FROM StockTransactionItems WHERE IngredientId = @IngredientId";
+            SqlParameter[] parameters = {
+                new SqlParameter("@IngredientId", SqlDbType.Int) { Value = ingredientId }
+            };
+            object res = DatabaseHelper.ExecuteScalar(sql, parameters);
+            return Convert.ToInt32(res) > 0;
+        }
+
         public bool DeleteIngredient(int ingredientId)
         {
             string sql = "DELETE FROM Ingredients WHERE IngredientId = @IngredientId";
@@ -174,6 +220,7 @@ namespace Tonyo_sPizza.Data.Repositories
         public bool BatchSaveIngredients(List<Ingredient> ingredients)
         {
             if (ingredients == null) return true;
+            DatabaseHelper.EnsureSchemaUpgrades();
 
             using (var conn = DatabaseHelper.GetConnection())
             {
@@ -187,10 +234,10 @@ namespace Tonyo_sPizza.Data.Repositories
                             string sql = @"UPDATE Ingredients 
                                            SET CategoryId = @CategoryId, CategoryName = @CategoryName, Name = @Name, 
                                                CurrentStock = @CurrentStock, Unit = @Unit, 
-                                               MinThreshold = @MinThreshold, CostPerUnit = @CostPerUnit
+                                               MinThreshold = @MinThreshold, CostPerUnit = @CostPerUnit, IsActive = @IsActive
                                            WHERE IngredientId = @IngredientId";
 
-                            SqlParameter[] parameters = {
+                            var parameters = new List<SqlParameter> {
                                 new SqlParameter("@CategoryId", SqlDbType.Int) { Value = (object)ing.CategoryId ?? DBNull.Value },
                                 new SqlParameter("@CategoryName", SqlDbType.NVarChar, 50) { Value = ing.CategoryName ?? "General" },
                                 new SqlParameter("@Name", SqlDbType.NVarChar, 100) { Value = ing.Name },
@@ -198,10 +245,21 @@ namespace Tonyo_sPizza.Data.Repositories
                                 new SqlParameter("@Unit", SqlDbType.NVarChar, 20) { Value = ing.Unit },
                                 new SqlParameter("@MinThreshold", SqlDbType.Decimal) { Value = ing.MinThreshold },
                                 new SqlParameter("@CostPerUnit", SqlDbType.Decimal) { Value = ing.CostPerUnit },
+                                new SqlParameter("@IsActive", SqlDbType.Bit) { Value = ing.IsActive },
                                 new SqlParameter("@IngredientId", SqlDbType.Int) { Value = ing.IngredientId }
                             };
 
-                            DatabaseHelper.ExecuteNonQuery(sql, parameters, trans);
+                            if (ing.RowVersion != null && ing.RowVersion.Length == 8)
+                            {
+                                sql += " AND RowVersion = @RowVersion";
+                                parameters.Add(new SqlParameter("@RowVersion", SqlDbType.Timestamp) { Value = ing.RowVersion });
+                            }
+
+                            int rows = DatabaseHelper.ExecuteNonQuery(sql, parameters.ToArray(), trans);
+                            if (rows == 0 && ing.RowVersion != null)
+                            {
+                                throw new DBConcurrencyException($"Stock item '{ing.Name}' was modified concurrently. Please refresh inventory and retry.");
+                            }
                         }
                         trans.Commit();
                         return true;
@@ -220,7 +278,7 @@ namespace Tonyo_sPizza.Data.Repositories
             int? catId = row.Table.Columns.Contains("CategoryId") && row["CategoryId"] != DBNull.Value ? (int?)Convert.ToInt32(row["CategoryId"]) : null;
             string catName = row.Table.Columns.Contains("CategoryName") && row["CategoryName"] != DBNull.Value ? Convert.ToString(row["CategoryName"]) : "General";
 
-            return new Ingredient(
+            var ing = new Ingredient(
                 Convert.ToInt32(row["IngredientId"]),
                 Convert.ToString(row["Name"]),
                 Convert.ToDecimal(row["CurrentStock"]),
@@ -231,6 +289,13 @@ namespace Tonyo_sPizza.Data.Repositories
                 catId,
                 catName
             );
+
+            if (row.Table.Columns.Contains("IsActive") && row["IsActive"] != DBNull.Value)
+                ing.IsActive = Convert.ToBoolean(row["IsActive"]);
+            if (row.Table.Columns.Contains("RowVersion") && row["RowVersion"] != DBNull.Value)
+                ing.RowVersion = (byte[])row["RowVersion"];
+
+            return ing;
         }
     }
 }

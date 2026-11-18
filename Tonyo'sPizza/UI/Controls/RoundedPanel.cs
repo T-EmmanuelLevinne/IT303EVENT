@@ -9,7 +9,7 @@ namespace Tonyo_sPizza.UI.Controls
 {
     public class RoundedPanel : Panel
     {
-        private int _borderRadius = 16;
+        private int _borderRadius = 12;
         private Color _borderColor = AppColors.Border;
         private int _borderWidth = 1;
         private bool _drawBorder = true;
@@ -21,7 +21,7 @@ namespace Tonyo_sPizza.UI.Controls
         public int BorderRadius
         {
             get => _borderRadius;
-            set { _borderRadius = Math.Max(0, value); UpdateRegion(); Invalidate(); }
+            set { _borderRadius = Math.Max(0, value); Invalidate(); }
         }
 
         [Category("Appearance")]
@@ -76,60 +76,63 @@ namespace Tonyo_sPizza.UI.Controls
         protected override void OnResize(EventArgs eventargs)
         {
             base.OnResize(eventargs);
-            UpdateRegion();
-        }
-
-        private void UpdateRegion()
-        {
-            // We do smooth GDI+ anti-aliased drawing in OnPaint against the parent background,
-            // so we don't apply a jagged 1-bit window Region which causes stair-stepped pixelated edges.
             Region = null;
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
             Graphics g = e.Graphics;
             UIHelper.SetHighQuality(g);
 
-            // Paint parent background first to ensure no black edges
-            Color parentBg = Parent != null ? Parent.BackColor : AppColors.Background;
+            Color parentBg = AppColors.Background;
+            Control p = Parent;
+            while (p != null)
+            {
+                if (p.BackColor != Color.Transparent && p.BackColor.A == 255)
+                {
+                    parentBg = p.BackColor;
+                    break;
+                }
+                p = p.Parent;
+            }
+
             using (SolidBrush parentBrush = new SolidBrush(parentBg))
             {
                 g.FillRectangle(parentBrush, ClientRectangle);
             }
 
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
-            if (rect.Width <= 0 || rect.Height <= 0) return;
-
-            using (GraphicsPath path = UIHelper.GetRoundedRectanglePath(rect, _borderRadius))
+            if (rect.Width > 0 && rect.Height > 0)
             {
-                // Fill Background
-                if (_gradientStartColor != Color.Empty && _gradientEndColor != Color.Empty)
+                using (GraphicsPath path = UIHelper.GetRoundedRectanglePath(rect, _borderRadius))
                 {
-                    using (LinearGradientBrush brush = new LinearGradientBrush(rect, _gradientStartColor, _gradientEndColor, _gradientAngle))
+                    if (_gradientStartColor != Color.Empty && _gradientEndColor != Color.Empty)
                     {
-                        g.FillPath(brush, path);
+                        using (LinearGradientBrush brush = new LinearGradientBrush(rect, _gradientStartColor, _gradientEndColor, _gradientAngle))
+                        {
+                            g.FillPath(brush, path);
+                        }
                     }
-                }
-                else
-                {
-                    using (SolidBrush brush = new SolidBrush(BackColor))
+                    else
                     {
-                        g.FillPath(brush, path);
+                        using (SolidBrush brush = new SolidBrush(BackColor))
+                        {
+                            g.FillPath(brush, path);
+                        }
                     }
-                }
 
-                // Draw Border
-                if (_drawBorder && _borderWidth > 0)
-                {
-                    using (Pen pen = new Pen(_borderColor, _borderWidth))
+                    if (_drawBorder && _borderWidth > 0)
                     {
-                        pen.Alignment = PenAlignment.Inset;
-                        g.DrawPath(pen, path);
+                        using (Pen pen = new Pen(_borderColor, _borderWidth))
+                        {
+                            pen.Alignment = PenAlignment.Inset;
+                            g.DrawPath(pen, path);
+                        }
                     }
                 }
             }
+
+            base.OnPaint(e);
         }
     }
 }

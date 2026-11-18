@@ -8,6 +8,8 @@ namespace Tonyo_sPizza.Models
         public int? UserId { get; set; }
         public string Username { get; set; }
         public string Action { get; set; }
+        public string TableName { get; set; }
+        public string RecordId { get; set; }
         public string Details { get; set; }
         public DateTime Timestamp { get; set; }
 
@@ -16,12 +18,14 @@ namespace Tonyo_sPizza.Models
             Timestamp = DateTime.Now;
         }
 
-        public AuditLog(string username, string action, string details, int? userId = null)
+        public AuditLog(string username, string action, string details, int? userId = null, string tableName = null, string recordId = null)
         {
             Username = username;
             Action = action;
             Details = details;
             UserId = userId;
+            TableName = tableName;
+            RecordId = recordId;
             Timestamp = DateTime.Now;
         }
     }

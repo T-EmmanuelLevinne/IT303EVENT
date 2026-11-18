@@ -50,6 +50,9 @@ namespace Tonyo_sPizza.UI.Views.Customer
 
         private void SetupCustomUIAndEvents()
         {
+            UIHelper.EnableDoubleBuffering(this);
+            UIHelper.EnableDoubleBuffering(_flpOrders);
+
             if (_btnRefresh != null)
             {
                 _btnRefresh.Click += (s, e) => LoadCustomerOrders();
@@ -112,8 +115,8 @@ namespace Tonyo_sPizza.UI.Views.Customer
                 Size = new Size(130, 28),
                 Location = new Point(180, 2),
                 BorderRadius = 6,
-                NormalColor = Color.FromArgb(241, 245, 249),
-                HoverColor = Color.FromArgb(226, 232, 240),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
                 ForeColor = AppColors.TextDark,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
@@ -128,8 +131,8 @@ namespace Tonyo_sPizza.UI.Views.Customer
                 Size = new Size(130, 28),
                 Location = new Point(180, 2),
                 BorderRadius = 6,
-                NormalColor = Color.FromArgb(241, 245, 249),
-                HoverColor = Color.FromArgb(226, 232, 240),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
                 ForeColor = AppColors.TextDark,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
@@ -145,9 +148,9 @@ namespace Tonyo_sPizza.UI.Views.Customer
                 Size = new Size(130, 28),
                 Location = new Point(318, 2),
                 BorderRadius = 6,
-                NormalColor = Color.FromArgb(254, 226, 226),
+                NormalColor = AppColors.StatusCancelledBg,
                 HoverColor = Color.FromArgb(254, 202, 202),
-                ForeColor = Color.FromArgb(220, 38, 38),
+                ForeColor = AppColors.StatusCancelled,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
                 Enabled = false,
@@ -166,15 +169,15 @@ namespace Tonyo_sPizza.UI.Views.Customer
             {
                 Location = new Point(0, 134),
                 Size = new Size(1100, 32),
-                BackColor = Color.FromArgb(254, 243, 199),
+                BackColor = AppColors.StatusPendingBg,
                 Visible = false
             };
 
             _lblArchiveNotice = new Label
             {
-                Text = "📁 Personal Archive: Completed and cancelled orders are stored here. You can restore them anytime, or delete them permanently from your order history.",
+                Text = "Personal Archive: Completed and cancelled orders are stored here. You can restore them anytime, or delete them permanently from your order history.",
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(180, 83, 9),
+                ForeColor = AppColors.StatusPending,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleLeft,
                 Padding = new Padding(12, 0, 0, 0)
@@ -197,7 +200,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
                 Size = new Size(width, 32),
                 BorderRadius = 6,
                 NormalColor = Color.White,
-                HoverColor = Color.FromArgb(241, 245, 249),
+                HoverColor = AppColors.SecondaryHover,
                 ForeColor = AppColors.TextDark,
                 Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
@@ -249,7 +252,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
         {
             if (btn == null) return;
             btn.NormalColor = isActive ? AppColors.Primary : Color.White;
-            btn.HoverColor = isActive ? AppColors.PrimaryLight : Color.FromArgb(241, 245, 249);
+            btn.HoverColor = isActive ? AppColors.PrimaryLight : AppColors.SecondaryHover;
             btn.ForeColor = isActive ? Color.White : AppColors.TextDark;
             btn.Invalidate();
         }
@@ -366,6 +369,13 @@ namespace Tonyo_sPizza.UI.Views.Customer
                         }
                     };
 
+                    card.ReceiptRequested += (order) =>
+                    {
+                        using (var dlg = new Tonyo_sPizza.UI.Forms.Dialogs.ReceiptPreviewDialog(order))
+                        {
+                            dlg.ShowDialog(this);
+                        }
+                    };
                     card.SelectionChanged += (s, e) => UpdateSelectedSummary();
 
                     _flpOrders.Controls.Add(card);
@@ -375,9 +385,10 @@ namespace Tonyo_sPizza.UI.Views.Customer
             }
             catch (Exception ex)
             {
+                ErrorLogger.Log(ex, "CustomerOrdersControl.LoadCustomerOrders");
                 Label lblErr = new Label
                 {
-                    Text = $"Error loading orders: {ex.Message}",
+                    Text = "Unable to load your orders right now. Click Refresh Status to try again.",
                     Font = new Font("Segoe UI", 10f),
                     ForeColor = AppColors.StatusCancelled,
                     AutoSize = true

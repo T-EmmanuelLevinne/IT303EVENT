@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
 using Tonyo_sPizza.Data.Repositories;
 using Tonyo_sPizza.Models;
 using Tonyo_sPizza.Services;
-using Tonyo_sPizza.UI.Controls;
 using Tonyo_sPizza.UI.Forms.Dialogs;
 using Tonyo_sPizza.UI.Theme;
 using MenuItem = Tonyo_sPizza.Models.MenuItem;
@@ -15,6 +16,7 @@ namespace Tonyo_sPizza.UI.Views.Admin
     {
         private readonly MenuItemRepository _menuRepo;
         private readonly CategoryRepository _catRepo;
+        private readonly Dictionary<int, MenuItem> _rowItemMap = new Dictionary<int, MenuItem>();
 
         public AdminMenuControl()
         {
@@ -31,78 +33,71 @@ namespace Tonyo_sPizza.UI.Views.Admin
 
         private void SetupCustomUIAndEvents()
         {
+            UIHelper.EnableDoubleBuffering(this);
+
             if (lblSearchIcon != null)
             {
                 lblSearchIcon.Paint += (s, e) =>
                 {
                     UIHelper.SetHighQuality(e.Graphics);
-                    UIHelper.DrawVectorIcon(e.Graphics, "search", new Rectangle(0, 0, 16, 16), AppColors.TextLight);
+                    UIHelper.DrawVectorIcon(e.Graphics, "search", new Rectangle(0, 0, 15, 15), AppColors.TextLight);
                 };
             }
 
-            if (_txtSearch != null)
-            {
-                _txtSearch.TextChanged += (s, e) => LoadMenuGrid();
-            }
-
-            if (_cboCategoryFilter != null)
-            {
-                _cboCategoryFilter.SelectedIndexChanged += (s, e) => LoadMenuGrid();
-            }
+            if (_txtSearch != null) _txtSearch.TextChanged += (s, e) => LoadMenuGrid();
+            if (_cboCategoryFilter != null) _cboCategoryFilter.SelectedIndexChanged += (s, e) => LoadMenuGrid();
+            if (_chkShowArchived != null) _chkShowArchived.CheckedChanged += (s, e) => LoadMenuGrid();
 
             if (_btnAdd != null) _btnAdd.Click += BtnAdd_Click;
             if (_btnEdit != null) _btnEdit.Click += BtnEdit_Click;
+            if (_btnToggleArchive != null) _btnToggleArchive.Click += BtnToggleArchive_Click;
             if (_btnDelete != null) _btnDelete.Click += BtnDelete_Click;
             if (_btnRefresh != null) _btnRefresh.Click += (s, e) => { LoadCategoryFilter(); LoadMenuGrid(); };
 
             if (_dgvMenu != null)
             {
                 UIHelper.StyleDataGridView(_dgvMenu);
-                if (_dgvMenu.Columns.Count == 0)
-                {
-                    _dgvMenu.Columns.Add("Id", "ID");
-                    _dgvMenu.Columns.Add("Name", "Item Name");
-                    _dgvMenu.Columns.Add("Category", "Category");
-                    _dgvMenu.Columns.Add("Price", "Price");
-                    _dgvMenu.Columns.Add("InStock", "In Stock");
+                _dgvMenu.Columns.Clear();
+                _dgvMenu.Columns.Add("Id", "ID");
+                _dgvMenu.Columns.Add("Name", "Item Name");
+                _dgvMenu.Columns.Add("Category", "Category");
+                _dgvMenu.Columns.Add("Price", "Price");
+                _dgvMenu.Columns.Add("InStock", "Availability");
 
-                    _dgvMenu.Columns["Id"].Width = 60;
-                    _dgvMenu.Columns["Category"].Width = 140;
-                    _dgvMenu.Columns["Price"].Width = 120;
-                    _dgvMenu.Columns["InStock"].Width = 130;
-                    _dgvMenu.Columns["Name"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                }
+                UIHelper.ConfigureGridColumn(_dgvMenu, "Id", 56);
+                UIHelper.ConfigureGridColumn(_dgvMenu, "Name", 160, fill: true);
+                UIHelper.ConfigureGridColumn(_dgvMenu, "Category", 145);
+                UIHelper.ConfigureGridColumn(_dgvMenu, "Price", 110);
+                UIHelper.ConfigureGridColumn(_dgvMenu, "InStock", 130);
 
-                _dgvMenu.CellFormatting += DgvMenu_CellFormatting;
+                UIHelper.AttachStatusPillPainter(_dgvMenu, UIHelper.ResolveSemanticStatusColors, "InStock");
 
+                _dgvMenu.SelectionChanged += (s, e) => UpdateActionButtonStates();
                 _dgvMenu.CellDoubleClick += (s, e) =>
                 {
                     if (e.RowIndex >= 0) BtnEdit_Click(this, EventArgs.Empty);
                 };
 
-                _dgvMenu.MouseClick += (s, e) =>
+                _dgvMenu.CellMouseDown += (s, e) =>
                 {
-                    if (e.Button == MouseButtons.Right)
+                    if (e.Button == MouseButtons.Right && e.RowIndex >= 0)
                     {
-                        var hti = _dgvMenu.HitTest(e.X, e.Y);
-                        if (hti.RowIndex >= 0)
+                        _dgvMenu.ClearSelection();
+                        _dgvMenu.Rows[e.RowIndex].Selected = true;
+
+                        var item = GetSelectedItem();
+                        if (item != null)
                         {
-                            _dgvMenu.ClearSelection();
-                            _dgvMenu.Rows[hti.RowIndex].Selected = true;
-
-                            var item = GetSelectedItem();
-                            if (item != null)
-                            {
-                                var menu = UIHelper.CreateModernContextMenu();
-                                var itemEdit = UIHelper.CreateModernMenuItem("Edit Menu Item", "edit", (sender, args) => BtnEdit_Click(this, EventArgs.Empty));
-                                var itemRemove = UIHelper.CreateModernMenuItem("Remove Menu Item", "delete", (sender, args) => BtnDelete_Click(this, EventArgs.Empty), Color.FromArgb(220, 38, 38));
-
-                                menu.Items.Add(itemEdit);
-                                menu.Items.Add(new ToolStripSeparator());
-                                menu.Items.Add(itemRemove);
-
-                                menu.Show(Cursor.Position);
-                            }
+                            var menu = UIHelper.CreateModernContextMenu();
+                            menu.Items.Add(UIHelper.CreateModernMenuItem($"Edit '{item.Name}'", "edit", (sender, args) => BtnEdit_Click(this, EventArgs.Empty)));
+                            menu.Items.Add(UIHelper.CreateModernMenuItem(
+                                item.IsActive ? "Archive Item" : "Restore Item",
+                                "archive",
+                                (sender, args) => BtnToggleArchive_Click(this, EventArgs.Empty),
+                                item.IsActive ? AppColors.StatusPending : AppColors.StatusCompleted));
+                            menu.Items.Add(new ToolStripSeparator());
+                            menu.Items.Add(UIHelper.CreateModernMenuItem("Delete Item", "delete", (sender, args) => BtnDelete_Click(this, EventArgs.Empty), AppColors.StatusCancelled));
+                            menu.Show(Cursor.Position);
                         }
                     }
                 };
@@ -112,75 +107,119 @@ namespace Tonyo_sPizza.UI.Views.Admin
         private void LoadCategoryFilter()
         {
             if (_cboCategoryFilter == null) return;
-            var cats = _catRepo.GetAllCategories();
-            _cboCategoryFilter.Items.Clear();
-            _cboCategoryFilter.Items.Add(new Category { CategoryId = 0, CategoryName = "All Categories" });
-            foreach (var c in cats) _cboCategoryFilter.Items.Add(c);
-            _cboCategoryFilter.DisplayMember = "CategoryName";
-            _cboCategoryFilter.ValueMember = "CategoryId";
-            _cboCategoryFilter.SelectedIndex = 0;
+            try
+            {
+                int selectedCatId = (_cboCategoryFilter.SelectedItem as Category)?.CategoryId ?? 0;
+                var cats = _catRepo.GetAllCategories(includeArchived: false);
+                _cboCategoryFilter.Items.Clear();
+                _cboCategoryFilter.Items.Add(new Category { CategoryId = 0, CategoryName = "All Categories" });
+                int matchIdx = 0;
+                for (int i = 0; i < cats.Count; i++)
+                {
+                    _cboCategoryFilter.Items.Add(cats[i]);
+                    if (cats[i].CategoryId == selectedCatId) matchIdx = i + 1;
+                }
+                _cboCategoryFilter.DisplayMember = "CategoryName";
+                _cboCategoryFilter.ValueMember = "CategoryId";
+                _cboCategoryFilter.SelectedIndex = matchIdx;
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.ShowFriendlyError("Unable to load category filters right now.", ex, "Category Filter Error", this);
+            }
         }
 
         public void LoadMenuGrid()
         {
             _dgvMenu.Rows.Clear();
+            _rowItemMap.Clear();
             try
             {
-                string search = _txtSearch.Text.Trim();
+                string search = _txtSearch?.Text?.Trim();
                 int? categoryId = null;
                 if (_cboCategoryFilter?.SelectedItem is Category cat && cat.CategoryId > 0)
                 {
                     categoryId = cat.CategoryId;
                 }
+                bool showArchived = _chkShowArchived != null && _chkShowArchived.Checked;
 
-                var items = _menuRepo.GetMenuItemsFiltered(search, categoryId);
+                var items = _menuRepo.GetMenuItemsFiltered(search, categoryId, showArchived);
 
                 StockService.Instance.RefreshIfClean();
                 foreach (var itm in items)
                 {
+                    _rowItemMap[itm.ItemId] = itm;
                     int portions = StockService.Instance.GetAvailableStockForMenuItem(itm);
-                    bool inStock = itm.IsAvailable && portions > 0;
-                    string stockText = inStock ? "In Stock" : "Out of Stock";
+                    string stockText;
+                    if (!itm.IsActive)
+                    {
+                        stockText = "Archived";
+                    }
+                    else
+                    {
+                        bool inStock = itm.IsAvailable && portions > 0;
+                        stockText = inStock ? "In Stock" : "Out of Stock";
+                    }
 
-                    _dgvMenu.Rows.Add(
+                    int rowIdx = _dgvMenu.Rows.Add(
                         itm.ItemId,
                         itm.Name,
                         itm.CategoryName,
                         $"₱{itm.Price:N2}",
                         stockText
                     );
+
+                    if (!itm.IsActive)
+                    {
+                        _dgvMenu.Rows[rowIdx].DefaultCellStyle.ForeColor = AppColors.TextMuted;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading menu: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorLogger.ShowFriendlyError("Could not load the menu catalog. Please try refreshing.", ex, "Menu Load Error", this);
+            }
+            UpdateActionButtonStates();
+        }
+
+        private void UpdateActionButtonStates()
+        {
+            var selected = GetSelectedItemFromCache();
+            if (selected == null)
+            {
+                _btnToggleArchive.Text = "Archive";
+                return;
+            }
+
+            if (selected.IsActive)
+            {
+                _btnToggleArchive.Text = "Archive";
+                _btnToggleArchive.NormalColor = AppColors.StatusPendingBg;
+                _btnToggleArchive.HoverColor = Color.FromArgb(253, 230, 138);
+                _btnToggleArchive.ForeColor = AppColors.StatusPending;
+            }
+            else
+            {
+                _btnToggleArchive.Text = "Restore";
+                _btnToggleArchive.NormalColor = AppColors.StatusCompletedBg;
+                _btnToggleArchive.HoverColor = Color.FromArgb(187, 247, 208);
+                _btnToggleArchive.ForeColor = AppColors.StatusCompleted;
             }
         }
 
-        private void DgvMenu_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        private MenuItem GetSelectedItemFromCache()
         {
-            if (e.RowIndex < 0 || e.Value == null) return;
-            string col = _dgvMenu.Columns[e.ColumnIndex].Name;
-
-            if (col == "InStock")
+            if (_dgvMenu.SelectedRows.Count > 0 && _dgvMenu.SelectedRows[0].Cells["Id"].Value != null)
             {
-                string status = e.Value.ToString();
-                if (status == "Out of Stock")
-                {
-                    e.CellStyle.ForeColor = AppColors.StatusCancelled;
-                    e.CellStyle.Font = new Font("Segoe UI Bold", 9.5f, FontStyle.Bold);
-                }
-                else
-                {
-                    e.CellStyle.ForeColor = AppColors.StatusCompleted;
-                    e.CellStyle.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
-                }
+                int id = Convert.ToInt32(_dgvMenu.SelectedRows[0].Cells["Id"].Value);
+                if (_rowItemMap.TryGetValue(id, out var cached)) return cached;
             }
+            return null;
         }
 
         private MenuItem GetSelectedItem()
         {
-            if (_dgvMenu.SelectedRows.Count > 0)
+            if (_dgvMenu.SelectedRows.Count > 0 && _dgvMenu.SelectedRows[0].Cells["Id"].Value != null)
             {
                 int id = Convert.ToInt32(_dgvMenu.SelectedRows[0].Cells["Id"].Value);
                 return _menuRepo.GetMenuItemById(id);
@@ -192,7 +231,7 @@ namespace Tonyo_sPizza.UI.Views.Admin
         {
             using (var dlg = new AddEditMenuItemForm())
             {
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     LoadMenuGrid();
                 }
@@ -201,41 +240,116 @@ namespace Tonyo_sPizza.UI.Views.Admin
 
         private void BtnEdit_Click(object sender, EventArgs e)
         {
-            var item = GetSelectedItem();
-            if (item == null)
+            try
             {
-                MessageBox.Show("Please select an item to edit.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            using (var dlg = new AddEditMenuItemForm(item))
-            {
-                if (dlg.ShowDialog() == DialogResult.OK)
+                var item = GetSelectedItem();
+                if (item == null)
                 {
-                    LoadMenuGrid();
+                    MessageBox.Show(this, "Please select a menu item to edit.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
                 }
+
+                using (var dlg = new AddEditMenuItemForm(item))
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        LoadMenuGrid();
+                    }
+                }
+            }
+            catch (DBConcurrencyException cex)
+            {
+                MessageBox.Show(this, cex.Message, "Concurrent Edit Detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                LoadMenuGrid();
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.ShowFriendlyError("Could not open menu item editor.", ex, "Edit Error", this);
+            }
+        }
+
+        private void BtnToggleArchive_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var item = GetSelectedItem();
+                if (item == null)
+                {
+                    MessageBox.Show(this, "Please select a menu item first.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                bool targetActive = !item.IsActive;
+                string verb = targetActive ? "Restore" : "Archive";
+                string msg = targetActive
+                    ? $"Restore '{item.Name}' back to the active menu?"
+                    : $"Archive '{item.Name}' so customers can no longer order it while keeping past sales history?";
+
+                if (MessageBox.Show(this, msg, $"Confirm {verb}", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    if (_menuRepo.SetMenuItemActiveStatus(item.ItemId, targetActive))
+                    {
+                        AuditService.Instance.Log(targetActive ? "Restore" : "Archive", $"{verb}d menu item '{item.Name}'.", "MenuItems", item.ItemId.ToString());
+                        LoadMenuGrid();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.ShowFriendlyError("Failed to update menu item archive status.", ex, "Archive Error", this);
             }
         }
 
         private void BtnDelete_Click(object sender, EventArgs e)
         {
-            var item = GetSelectedItem();
-            if (item == null)
+            try
             {
-                MessageBox.Show("Please select an item to delete.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+                var item = GetSelectedItem();
+                if (item == null)
+                {
+                    MessageBox.Show(this, "Please select a menu item to delete.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
 
-            if (MessageBox.Show($"Are you sure you want to delete '{item.Name}'?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                if (_menuRepo.HasMenuItemOrders(item.ItemId))
+                {
+                    if (item.IsActive)
+                    {
+                        if (MessageBox.Show(
+                            this,
+                            $"'{item.Name}' cannot be permanently deleted because it appears in existing customer order history.\n\nWould you like to Archive it instead so it is hidden from ordering while keeping records intact?",
+                            "Referenced by Orders",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+                            _menuRepo.SetMenuItemActiveStatus(item.ItemId, false);
+                            AuditService.Instance.Log("Archive", $"Archived referenced menu item '{item.Name}'.", "MenuItems", item.ItemId.ToString());
+                            LoadMenuGrid();
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show(this, $"'{item.Name}' is already archived and has order history, so it cannot be permanently deleted.", "Referenced by Orders", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    return;
+                }
+
+                if (MessageBox.Show(this, $"Permanently delete '{item.Name}' from the catalog? This cannot be undone.", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    if (_menuRepo.DeleteMenuItem(item.ItemId))
+                    {
+                        AuditService.Instance.Log("Delete", $"Permanently deleted menu item '{item.Name}'.", "MenuItems", item.ItemId.ToString());
+                        LoadMenuGrid();
+                    }
+                    else
+                    {
+                        MessageBox.Show(this, "Failed to delete menu item.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
             {
-                if (_menuRepo.DeleteMenuItem(item.ItemId))
-                {
-                    LoadMenuGrid();
-                }
-                else
-                {
-                    MessageBox.Show("Failed to delete menu item.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                ErrorLogger.ShowFriendlyError("Could not delete this menu item. It may be referenced by existing records.", ex, "Delete Error", this);
             }
         }
     }

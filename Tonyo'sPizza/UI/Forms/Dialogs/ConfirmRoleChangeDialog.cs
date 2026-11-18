@@ -84,13 +84,16 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 }
             };
 
-            Label lblWarnIcon = new Label
+            Panel pnlWarnIcon = new Panel
             {
-                Text = "⚠️",
-                Font = new Font("Segoe UI Emoji", 14f),
-                Location = new Point(10, 12),
-                Size = new Size(30, 30),
+                Location = new Point(12, 18),
+                Size = new Size(26, 26),
                 BackColor = Color.Transparent
+            };
+            pnlWarnIcon.Paint += (s, e) =>
+            {
+                UIHelper.SetHighQuality(e.Graphics);
+                UIHelper.DrawVectorIcon(e.Graphics, "warning", new Rectangle(2, 2, 22, 22), AppColors.StatusPending);
             };
 
             Label lblWarnText = new Label
@@ -103,7 +106,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 BackColor = Color.Transparent
             };
 
-            pnlWarning.Controls.Add(lblWarnIcon);
+            pnlWarning.Controls.Add(pnlWarnIcon);
             pnlWarning.Controls.Add(lblWarnText);
             Controls.Add(pnlWarning);
             y += 76;
@@ -152,7 +155,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
 
             Label lblTransition = new Label
             {
-                Text = $"Role Transition:  {_targetUser.Role}  ➔  ",
+                Text = $"Role Transition:  {_targetUser.Role}  ->  ",
                 Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold),
                 ForeColor = AppColors.TextDark,
                 Location = new Point(14, 82),
@@ -268,6 +271,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             Controls.Add(_btnCancel);
             Controls.Add(_btnConfirm);
 
+            this.AcceptButton = _btnConfirm;
             this.CancelButton = _btnCancel;
             this.Shown += (s, e) => _txtAdminPassword.InnerTextBox.Focus();
         }
@@ -277,7 +281,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             string password = _txtAdminPassword.Text;
             if (string.IsNullOrWhiteSpace(password))
             {
-                _lblError.Text = "❌ Please enter your administrator password.";
+                _lblError.Text = "Please enter your administrator password.";
                 _lblError.Visible = true;
                 _txtAdminPassword.InnerTextBox.Focus();
                 return;
@@ -285,7 +289,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
 
             if (!AuthService.Instance.VerifyCurrentAdminPassword(password))
             {
-                _lblError.Text = "❌ Incorrect administrator password. Verification failed.";
+                _lblError.Text = "Incorrect administrator password. Verification failed.";
                 _lblError.Visible = true;
                 _txtAdminPassword.Text = string.Empty;
                 _txtAdminPassword.InnerTextBox.Focus();

@@ -39,6 +39,8 @@ namespace Tonyo_sPizza.UI.Controls
         {
             _item = item;
 
+            DoubleBuffered = true;
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
             Size = new Size(275, 84);
             BackColor = Color.White;
             Margin = new Padding(0, 0, 0, 8);
@@ -61,11 +63,12 @@ namespace Tonyo_sPizza.UI.Controls
                 Size = new Size(40, 40),
                 Location = new Point(28, 10),
                 SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.FromArgb(254, 242, 242),
+                BackColor = Color.FromArgb(253, 246, 238),
                 Cursor = Cursors.Hand
             };
 
             Image thumbImg = null;
+            string itemCategory = null;
             if (!string.IsNullOrEmpty(item.ImageBase64))
             {
                 try
@@ -80,18 +83,22 @@ namespace Tonyo_sPizza.UI.Controls
                 catch { }
             }
 
-            if (thumbImg == null && item.ItemId.HasValue)
+            if (item.ItemId.HasValue)
             {
                 try
                 {
                     var repo = new Tonyo_sPizza.Data.Repositories.MenuItemRepository();
                     var menuItem = repo.GetMenuItemById(item.ItemId.Value);
-                    thumbImg = menuItem?.GetImage();
+                    itemCategory = menuItem?.CategoryName;
+                    if (thumbImg == null)
+                    {
+                        thumbImg = menuItem?.GetImage();
+                    }
                 }
                 catch { }
             }
 
-            _picThumb.Image = thumbImg ?? UIHelper.GeneratePlaceholderPizzaImage(40, 40, item.ItemName ?? "");
+            _picThumb.Image = thumbImg ?? UIHelper.GeneratePlaceholderFoodImage(44, 44, item.ItemName ?? "", itemCategory, includeLabel: false);
 
             // Food Name
             _lblName = new Label
@@ -102,6 +109,7 @@ namespace Tonyo_sPizza.UI.Controls
                 Location = new Point(74, 8),
                 Size = new Size(115, 18),
                 AutoEllipsis = true,
+                UseMnemonic = false,
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
             };
@@ -144,12 +152,12 @@ namespace Tonyo_sPizza.UI.Controls
             // Remove Button
             _btnRemove = new Button
             {
-                Text = "✕",
+                Text = "x",
                 Size = new Size(22, 22),
                 Location = new Point(248, 7),
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI Bold", 8f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(239, 68, 68),
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = AppColors.TextLight,
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
             };
@@ -196,32 +204,7 @@ namespace Tonyo_sPizza.UI.Controls
                 Cursor = Cursors.Hand
             };
             _btnPlus.FlatAppearance.BorderSize = 0;
-            _btnPlus.Click += (s, e) =>
-            {
-                int maxStock = 99;
-                if (_item.ItemId.HasValue)
-                {
-                    try
-                    {
-                        var repo = new Tonyo_sPizza.Data.Repositories.MenuItemRepository();
-                        var menuItem = repo.GetMenuItemById(_item.ItemId.Value);
-                        if (menuItem != null)
-                        {
-                            maxStock = Tonyo_sPizza.Services.StockService.Instance.GetAvailableStockForMenuItem(menuItem, _item.SelectedDoughSize);
-                        }
-                    }
-                    catch { }
-                }
-
-                if (_item.Quantity < maxStock)
-                {
-                    QuantityChanged?.Invoke(_item, _item.Quantity + 1);
-                }
-                else
-                {
-                    MessageBox.Show($"Cannot increase quantity. Maximum available stock is {maxStock}.", "Stock Limit", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            };
+            _btnPlus.Click += (s, e) => TryIncreaseQuantity();
 
             _btnEdit = new RoundedButton
             {
@@ -250,14 +233,32 @@ namespace Tonyo_sPizza.UI.Controls
             // Right-click context menu
             var menu = UIHelper.CreateModernContextMenu();
             var mnuEdit = UIHelper.CreateModernMenuItem("Edit Customization", "edit", (s, e) => EditRequested?.Invoke(_item));
-            var mnuRemove = UIHelper.CreateModernMenuItem("Remove from Cart", "delete", (s, e) => ItemRemoved?.Invoke(_item), Color.FromArgb(220, 38, 38));
+            var mnuInc = UIHelper.CreateModernMenuItem("Increase Quantity", "add", (s, e) => TryIncreaseQuantity());
+            var mnuDec = UIHelper.CreateModernMenuItem("Decrease Quantity", "minus", (s, e) => QuantityChanged?.Invoke(_item, _item.Quantity - 1));
+            var mnuToggleSelect = UIHelper.CreateModernMenuItem("Selected for Checkout", "check", (s, e) => IsSelected = !IsSelected);
+            var mnuRemove = UIHelper.CreateModernMenuItem("Remove from Cart", "delete", (s, e) => ItemRemoved?.Invoke(_item), AppColors.StatusCancelled);
+
             menu.Items.Add(mnuEdit);
+            menu.Items.Add(mnuInc);
+            menu.Items.Add(mnuDec);
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(mnuToggleSelect);
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(mnuRemove);
+
+            menu.Opening += (s, e) =>
+            {
+                mnuDec.Enabled = _item.Quantity > 1;
+                mnuToggleSelect.Checked = IsSelected;
+                mnuToggleSelect.Text = IsSelected ? "Selected for Checkout" : "Select for Checkout";
+            };
+
             this.ContextMenuStrip = menu;
             _picThumb.ContextMenuStrip = menu;
             _lblName.ContextMenuStrip = menu;
             _lblDetails.ContextMenuStrip = menu;
+            _lblPrice.ContextMenuStrip = menu;
+            _lblQtyDisplay.ContextMenuStrip = menu;
 
             // Hover effects
             EventHandler onEnter = (s, e) => { _isHovered = true; Invalidate(); };
@@ -293,6 +294,33 @@ namespace Tonyo_sPizza.UI.Controls
             Resize += (s, e) => UpdateLayout();
         }
 
+        private void TryIncreaseQuantity()
+        {
+            int maxStock = 99;
+            if (_item.ItemId.HasValue)
+            {
+                try
+                {
+                    var repo = new Tonyo_sPizza.Data.Repositories.MenuItemRepository();
+                    var menuItem = repo.GetMenuItemById(_item.ItemId.Value);
+                    if (menuItem != null)
+                    {
+                        maxStock = Tonyo_sPizza.Services.StockService.Instance.GetAvailableStockForMenuItem(menuItem, _item.SelectedDoughSize);
+                    }
+                }
+                catch { }
+            }
+
+            if (_item.Quantity < maxStock)
+            {
+                QuantityChanged?.Invoke(_item, _item.Quantity + 1);
+            }
+            else
+            {
+                MessageBox.Show($"Cannot increase quantity. Maximum available stock is {maxStock}.", "Stock Limit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
         private void UpdateLayout()
         {
             _btnRemove.Left = Width - 28;
@@ -309,8 +337,8 @@ namespace Tonyo_sPizza.UI.Controls
             UIHelper.SetHighQuality(e.Graphics);
 
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
-            Color borderColor = _isHovered ? AppColors.Primary : AppColors.Border;
-            Color bgColor = _isHovered ? Color.FromArgb(255, 250, 245) : Color.White;
+            Color borderColor = _isHovered ? AppColors.PrimaryBorder : AppColors.Border;
+            Color bgColor = _isHovered ? AppColors.PrimarySoft : Color.White;
 
             using (var path = UIHelper.GetRoundedRectanglePath(rect, 8))
             {
@@ -319,7 +347,7 @@ namespace Tonyo_sPizza.UI.Controls
                     e.Graphics.FillPath(brush, path);
                 }
 
-                using (var pen = new Pen(borderColor, _isHovered ? 1.5f : 1f))
+                using (var pen = new Pen(borderColor, _isHovered ? 1.3f : 1f))
                 {
                     e.Graphics.DrawPath(pen, path);
                 }

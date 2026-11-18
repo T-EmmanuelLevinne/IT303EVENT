@@ -32,6 +32,14 @@ namespace Tonyo_sPizza.Data.Repositories
             return list;
         }
 
+        public PromoVoucher GetVoucherById(int promoId)
+        {
+            DatabaseHelper.EnsureSchemaUpgrades();
+            DataTable dt = DatabaseHelper.ExecuteQuery("SELECT * FROM PromoVouchers WHERE PromoId = @PromoId", new[] { new SqlParameter("@PromoId", SqlDbType.Int) { Value = promoId } });
+            if (dt.Rows.Count > 0) return MapRowToPromoVoucher(dt.Rows[0]);
+            return null;
+        }
+
         public PromoVoucher GetVoucherByCode(string code)
         {
             if (string.IsNullOrWhiteSpace(code)) return null;
@@ -74,6 +82,8 @@ namespace Tonyo_sPizza.Data.Repositories
             if (res != null && res != DBNull.Value)
             {
                 voucher.PromoId = Convert.ToInt32(res);
+                var fresh = GetVoucherById(voucher.PromoId);
+                if (fresh != null) voucher.RowVersion = fresh.RowVersion;
                 return true;
             }
             return false;
@@ -95,7 +105,7 @@ namespace Tonyo_sPizza.Data.Repositories
                     IsActive = @IsActive
                 WHERE PromoId = @PromoId";
 
-            SqlParameter[] parameters = {
+            var parameters = new List<SqlParameter> {
                 new SqlParameter("@PromoId", SqlDbType.Int) { Value = voucher.PromoId },
                 new SqlParameter("@Code", SqlDbType.NVarChar, 50) { Value = voucher.Code.Trim().ToUpper() },
                 new SqlParameter("@Description", SqlDbType.NVarChar, 255) { Value = (object)voucher.Description ?? DBNull.Value },
@@ -106,7 +116,21 @@ namespace Tonyo_sPizza.Data.Repositories
                 new SqlParameter("@IsActive", SqlDbType.Bit) { Value = voucher.IsActive }
             };
 
-            return DatabaseHelper.ExecuteNonQuery(sql, parameters) > 0;
+            if (voucher.RowVersion != null && voucher.RowVersion.Length == 8)
+            {
+                sql += " AND RowVersion = @RowVersion";
+                parameters.Add(new SqlParameter("@RowVersion", SqlDbType.Timestamp) { Value = voucher.RowVersion });
+            }
+
+            int rows = DatabaseHelper.ExecuteNonQuery(sql, parameters.ToArray());
+            if (rows == 0 && voucher.RowVersion != null)
+            {
+                if (GetVoucherById(voucher.PromoId) != null)
+                {
+                    throw new DBConcurrencyException($"Promo voucher '{voucher.Code}' was modified by another administrator. Please refresh before saving.");
+                }
+            }
+            return rows > 0;
         }
 
         public bool ToggleActive(int promoId, bool isActive)
@@ -130,7 +154,7 @@ namespace Tonyo_sPizza.Data.Repositories
 
         private PromoVoucher MapRowToPromoVoucher(DataRow row)
         {
-            return new PromoVoucher(
+            var pv = new PromoVoucher(
                 Convert.ToInt32(row["PromoId"]),
                 Convert.ToString(row["Code"]),
                 row["Description"] != DBNull.Value ? Convert.ToString(row["Description"]) : string.Empty,
@@ -142,6 +166,11 @@ namespace Tonyo_sPizza.Data.Repositories
                 row.Table.Columns.Contains("MaxDiscountAmount") && row["MaxDiscountAmount"] != DBNull.Value ? (decimal?)Convert.ToDecimal(row["MaxDiscountAmount"]) : null,
                 row.Table.Columns.Contains("ExpiresAt") && row["ExpiresAt"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["ExpiresAt"]) : null
             );
+
+            if (row.Table.Columns.Contains("RowVersion") && row["RowVersion"] != DBNull.Value)
+                pv.RowVersion = (byte[])row["RowVersion"];
+
+            return pv;
         }
     }
 }

@@ -18,12 +18,13 @@ namespace Tonyo_sPizza.UI.Views.Admin
         private void InitializeComponent()
         {
             this.topPanel = new System.Windows.Forms.Panel();
+            this.pnlTopRow = new System.Windows.Forms.Panel();
             this.title = new System.Windows.Forms.Label();
             this.sub = new System.Windows.Forms.Label();
-            this.pnlControls = new System.Windows.Forms.Panel();
             this.pnlSearch = new Tonyo_sPizza.UI.Controls.RoundedPanel();
             this.lblSearchIcon = new System.Windows.Forms.Label();
             this._txtSearch = new System.Windows.Forms.TextBox();
+            this.pnlControls = new System.Windows.Forms.FlowLayoutPanel();
             this._btnAdd = new Tonyo_sPizza.UI.Controls.RoundedButton();
             this._btnEdit = new Tonyo_sPizza.UI.Controls.RoundedButton();
             this._btnToggle = new Tonyo_sPizza.UI.Controls.RoundedButton();
@@ -32,232 +33,207 @@ namespace Tonyo_sPizza.UI.Views.Admin
             this._lblCount = new System.Windows.Forms.Label();
             this.pnlGridCard = new Tonyo_sPizza.UI.Controls.RoundedPanel();
             this._dgvPromos = new System.Windows.Forms.DataGridView();
+
             this.topPanel.SuspendLayout();
-            this.pnlControls.SuspendLayout();
+            this.pnlTopRow.SuspendLayout();
             this.pnlSearch.SuspendLayout();
+            this.pnlControls.SuspendLayout();
             this.pnlGridCard.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this._dgvPromos)).BeginInit();
             this.SuspendLayout();
-            // 
+
             // topPanel
-            // 
             this.topPanel.Controls.Add(this.pnlControls);
-            this.topPanel.Controls.Add(this.sub);
-            this.topPanel.Controls.Add(this.title);
+            this.topPanel.Controls.Add(this.pnlTopRow);
             this.topPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.topPanel.Height = 90;
-            this.topPanel.Location = new System.Drawing.Point(24, 24);
+            this.topPanel.Height = 104;
             this.topPanel.Name = "topPanel";
-            this.topPanel.Size = new System.Drawing.Size(1200, 90);
-            this.topPanel.TabIndex = 0;
-            // 
+
+            // pnlTopRow
+            this.pnlTopRow.Controls.Add(this.pnlSearch);
+            this.pnlTopRow.Controls.Add(this.sub);
+            this.pnlTopRow.Controls.Add(this.title);
+            this.pnlTopRow.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlTopRow.Height = 52;
+            this.pnlTopRow.Name = "pnlTopRow";
+
             // title
-            // 
             this.title.AutoSize = true;
-            this.title.Font = new System.Drawing.Font("Segoe UI", 15F, System.Drawing.FontStyle.Bold);
-            this.title.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.title.Location = new System.Drawing.Point(0, 4);
+            this.title.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
+            this.title.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
+            this.title.Location = new System.Drawing.Point(0, 0);
             this.title.Name = "title";
-            this.title.Size = new System.Drawing.Size(325, 28);
-            this.title.TabIndex = 0;
-            this.title.Text = "Promo & Voucher Management";
-            // 
+            this.title.Text = "Promo & Discount Vouchers";
+            this.title.UseMnemonic = false;
+
             // sub
-            // 
             this.sub.AutoSize = true;
-            this.sub.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.sub.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
-            this.sub.Location = new System.Drawing.Point(0, 30);
+            this.sub.Font = new System.Drawing.Font("Segoe UI", 9.25F);
+            this.sub.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMuted;
+            this.sub.Location = new System.Drawing.Point(2, 30);
             this.sub.Name = "sub";
-            this.sub.Size = new System.Drawing.Size(595, 15);
-            this.sub.TabIndex = 1;
-            this.sub.Text = "Create discount vouchers, configure percentages, set minimum spend rules & manage promotional campaigns.";
-            // 
-            // pnlControls
-            // 
-            this.pnlControls.Controls.Add(this._lblCount);
-            this.pnlControls.Controls.Add(this._btnRefresh);
-            this.pnlControls.Controls.Add(this._btnDelete);
-            this.pnlControls.Controls.Add(this._btnToggle);
-            this.pnlControls.Controls.Add(this._btnEdit);
-            this.pnlControls.Controls.Add(this._btnAdd);
-            this.pnlControls.Controls.Add(this.pnlSearch);
-            this.pnlControls.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlControls.Height = 40;
-            this.pnlControls.Location = new System.Drawing.Point(0, 50);
-            this.pnlControls.Name = "pnlControls";
-            this.pnlControls.Size = new System.Drawing.Size(1200, 40);
-            this.pnlControls.TabIndex = 2;
-            // 
+            this.sub.Text = "Configure coupon codes, minimum spend rules, and active campaign statuses.";
+
             // pnlSearch
-            // 
             this.pnlSearch.BackColor = System.Drawing.Color.White;
-            this.pnlSearch.BorderColor = System.Drawing.Color.FromArgb(226, 232, 240);
+            this.pnlSearch.BorderColor = Tonyo_sPizza.UI.Theme.AppColors.Border;
             this.pnlSearch.BorderRadius = 8;
             this.pnlSearch.BorderWidth = 1;
             this.pnlSearch.Controls.Add(this._txtSearch);
             this.pnlSearch.Controls.Add(this.lblSearchIcon);
+            this.pnlSearch.Dock = System.Windows.Forms.DockStyle.Right;
             this.pnlSearch.DrawBorder = true;
-            this.pnlSearch.Location = new System.Drawing.Point(0, 2);
             this.pnlSearch.Name = "pnlSearch";
-            this.pnlSearch.Size = new System.Drawing.Size(240, 36);
-            this.pnlSearch.TabIndex = 0;
-            // 
+            this.pnlSearch.Size = new System.Drawing.Size(270, 36);
+
             // lblSearchIcon
-            // 
-            this.lblSearchIcon.Location = new System.Drawing.Point(8, 9);
+            this.lblSearchIcon.Location = new System.Drawing.Point(10, 10);
             this.lblSearchIcon.Name = "lblSearchIcon";
-            this.lblSearchIcon.Size = new System.Drawing.Size(18, 18);
-            this.lblSearchIcon.TabIndex = 0;
-            // 
+            this.lblSearchIcon.Size = new System.Drawing.Size(16, 16);
+
             // _txtSearch
-            // 
             this._txtSearch.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this._txtSearch.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this._txtSearch.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this._txtSearch.Location = new System.Drawing.Point(32, 9);
             this._txtSearch.Name = "_txtSearch";
-            this._txtSearch.Size = new System.Drawing.Size(195, 17);
-            this._txtSearch.TabIndex = 1;
-            // 
+            this._txtSearch.Size = new System.Drawing.Size(226, 17);
+
+            // pnlControls
+            this.pnlControls.AutoScroll = true;
+            this.pnlControls.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.pnlControls.Height = 46;
+            this.pnlControls.Name = "pnlControls";
+            this.pnlControls.Padding = new System.Windows.Forms.Padding(0, 6, 0, 2);
+            this.pnlControls.WrapContents = false;
+
             // _btnAdd
-            // 
-            this._btnAdd.BorderRadius = 8;
-            this._btnAdd.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this._btnAdd.BorderRadius = 7;
             this._btnAdd.ForeColor = System.Drawing.Color.White;
+            this._btnAdd.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryLight;
             this._btnAdd.IconName = "add";
-            this._btnAdd.Location = new System.Drawing.Point(255, 2);
+            this._btnAdd.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
             this._btnAdd.Name = "_btnAdd";
-            this._btnAdd.NormalColor = System.Drawing.Color.FromArgb(234, 88, 12);
-            this._btnAdd.HoverColor = System.Drawing.Color.FromArgb(249, 115, 22);
-            this._btnAdd.Size = new System.Drawing.Size(150, 36);
-            this._btnAdd.TabIndex = 1;
-            this._btnAdd.Text = "Add Promo";
-            // 
+            this._btnAdd.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.Primary;
+            this._btnAdd.PressedColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryDark;
+            this._btnAdd.Size = new System.Drawing.Size(136, 34);
+            this._btnAdd.Text = "Add Voucher";
+
             // _btnEdit
-            // 
-            this._btnEdit.BorderRadius = 8;
-            this._btnEdit.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnEdit.ForeColor = System.Drawing.Color.White;
+            this._btnEdit.BorderRadius = 7;
+            this._btnEdit.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
+            this._btnEdit.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryHover;
             this._btnEdit.IconName = "edit";
-            this._btnEdit.Location = new System.Drawing.Point(415, 2);
+            this._btnEdit.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
             this._btnEdit.Name = "_btnEdit";
-            this._btnEdit.NormalColor = System.Drawing.Color.FromArgb(71, 85, 105);
-            this._btnEdit.HoverColor = System.Drawing.Color.FromArgb(100, 116, 139);
-            this._btnEdit.Size = new System.Drawing.Size(150, 36);
-            this._btnEdit.TabIndex = 2;
-            this._btnEdit.Text = "Edit Selected";
-            // 
+            this._btnEdit.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryNormal;
+            this._btnEdit.PressedColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryPressed;
+            this._btnEdit.Size = new System.Drawing.Size(96, 34);
+            this._btnEdit.Text = "Edit";
+
             // _btnToggle
-            // 
-            this._btnToggle.BorderRadius = 8;
-            this._btnToggle.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnToggle.ForeColor = System.Drawing.Color.White;
+            this._btnToggle.BorderRadius = 7;
+            this._btnToggle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.StatusPending;
+            this._btnToggle.HoverColor = System.Drawing.Color.FromArgb(253, 230, 138);
             this._btnToggle.IconName = "check";
-            this._btnToggle.Location = new System.Drawing.Point(575, 2);
+            this._btnToggle.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
             this._btnToggle.Name = "_btnToggle";
-            this._btnToggle.NormalColor = System.Drawing.Color.FromArgb(16, 185, 129);
-            this._btnToggle.HoverColor = System.Drawing.Color.FromArgb(34, 197, 94);
-            this._btnToggle.Size = new System.Drawing.Size(145, 36);
-            this._btnToggle.TabIndex = 3;
-            this._btnToggle.Text = "Toggle Active";
-            // 
+            this._btnToggle.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.StatusPendingBg;
+            this._btnToggle.PressedColor = System.Drawing.Color.FromArgb(252, 211, 77);
+            this._btnToggle.Size = new System.Drawing.Size(136, 34);
+            this._btnToggle.Text = "Toggle Status";
+
             // _btnDelete
-            // 
-            this._btnDelete.BorderRadius = 8;
-            this._btnDelete.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnDelete.ForeColor = System.Drawing.Color.White;
+            this._btnDelete.BorderRadius = 7;
+            this._btnDelete.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.StatusCancelled;
+            this._btnDelete.HoverColor = System.Drawing.Color.FromArgb(254, 202, 202);
             this._btnDelete.IconName = "delete";
-            this._btnDelete.Location = new System.Drawing.Point(730, 2);
+            this._btnDelete.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
             this._btnDelete.Name = "_btnDelete";
-            this._btnDelete.NormalColor = System.Drawing.Color.FromArgb(239, 68, 68);
-            this._btnDelete.HoverColor = System.Drawing.Color.FromArgb(220, 38, 38);
-            this._btnDelete.Size = new System.Drawing.Size(110, 36);
-            this._btnDelete.TabIndex = 4;
+            this._btnDelete.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.StatusCancelledBg;
+            this._btnDelete.PressedColor = System.Drawing.Color.FromArgb(252, 165, 165);
+            this._btnDelete.Size = new System.Drawing.Size(96, 34);
             this._btnDelete.Text = "Delete";
-            // 
+
             // _btnRefresh
-            // 
-            this._btnRefresh.BorderRadius = 8;
-            this._btnRefresh.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnRefresh.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this._btnRefresh.BorderRadius = 7;
+            this._btnRefresh.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
+            this._btnRefresh.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryHover;
             this._btnRefresh.IconName = "refresh";
-            this._btnRefresh.Location = new System.Drawing.Point(850, 2);
+            this._btnRefresh.Margin = new System.Windows.Forms.Padding(0, 0, 14, 0);
             this._btnRefresh.Name = "_btnRefresh";
-            this._btnRefresh.NormalColor = System.Drawing.Color.FromArgb(226, 232, 240);
-            this._btnRefresh.HoverColor = System.Drawing.Color.FromArgb(203, 213, 225);
-            this._btnRefresh.Size = new System.Drawing.Size(120, 36);
-            this._btnRefresh.TabIndex = 5;
+            this._btnRefresh.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryNormal;
+            this._btnRefresh.PressedColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryPressed;
+            this._btnRefresh.Size = new System.Drawing.Size(104, 34);
             this._btnRefresh.Text = "Refresh";
-            // 
+
             // _lblCount
-            // 
             this._lblCount.AutoSize = true;
-            this._lblCount.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this._lblCount.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
-            this._lblCount.Location = new System.Drawing.Point(980, 10);
+            this._lblCount.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this._lblCount.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMuted;
+            this._lblCount.Margin = new System.Windows.Forms.Padding(0, 8, 0, 0);
             this._lblCount.Name = "_lblCount";
-            this._lblCount.Size = new System.Drawing.Size(65, 15);
-            this._lblCount.TabIndex = 6;
-            this._lblCount.Text = "0 vouchers";
-            // 
+            this._lblCount.Text = "0 voucher(s)";
+
+            this.pnlControls.Controls.Add(this._btnAdd);
+            this.pnlControls.Controls.Add(this._btnEdit);
+            this.pnlControls.Controls.Add(this._btnToggle);
+            this.pnlControls.Controls.Add(this._btnDelete);
+            this.pnlControls.Controls.Add(this._btnRefresh);
+            this.pnlControls.Controls.Add(this._lblCount);
+
             // pnlGridCard
-            // 
             this.pnlGridCard.BackColor = System.Drawing.Color.White;
-            this.pnlGridCard.BorderColor = System.Drawing.Color.FromArgb(226, 232, 240);
-            this.pnlGridCard.BorderRadius = 14;
+            this.pnlGridCard.BorderColor = Tonyo_sPizza.UI.Theme.AppColors.Border;
+            this.pnlGridCard.BorderRadius = 12;
             this.pnlGridCard.BorderWidth = 1;
             this.pnlGridCard.Controls.Add(this._dgvPromos);
             this.pnlGridCard.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlGridCard.DrawBorder = true;
-            this.pnlGridCard.Location = new System.Drawing.Point(24, 114);
             this.pnlGridCard.Name = "pnlGridCard";
             this.pnlGridCard.Padding = new System.Windows.Forms.Padding(12);
-            this.pnlGridCard.Size = new System.Drawing.Size(1200, 468);
-            this.pnlGridCard.TabIndex = 1;
-            // 
+
             // _dgvPromos
-            // 
             this._dgvPromos.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._dgvPromos.Location = new System.Drawing.Point(12, 12);
             this._dgvPromos.MultiSelect = false;
             this._dgvPromos.Name = "_dgvPromos";
             this._dgvPromos.ReadOnly = true;
             this._dgvPromos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this._dgvPromos.Size = new System.Drawing.Size(1176, 444);
-            this._dgvPromos.TabIndex = 0;
-            // 
+
             // AdminPromoControl
-            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(248, 250, 252);
+            this.BackColor = Tonyo_sPizza.UI.Theme.AppColors.Background;
             this.Controls.Add(this.pnlGridCard);
             this.Controls.Add(this.topPanel);
             this.Dock = System.Windows.Forms.DockStyle.Fill;
             this.Name = "AdminPromoControl";
-            this.Padding = new System.Windows.Forms.Padding(24);
+            this.Padding = new System.Windows.Forms.Padding(24, 20, 24, 20);
             this.Size = new System.Drawing.Size(1248, 606);
+
             this.topPanel.ResumeLayout(false);
             this.topPanel.PerformLayout();
-            this.pnlControls.ResumeLayout(false);
-            this.pnlControls.PerformLayout();
+            this.pnlTopRow.ResumeLayout(false);
+            this.pnlTopRow.PerformLayout();
             this.pnlSearch.ResumeLayout(false);
             this.pnlSearch.PerformLayout();
+            this.pnlControls.ResumeLayout(false);
+            this.pnlControls.PerformLayout();
             this.pnlGridCard.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this._dgvPromos)).EndInit();
             this.ResumeLayout(false);
-
         }
 
         #endregion
 
         private System.Windows.Forms.Panel topPanel;
+        private System.Windows.Forms.Panel pnlTopRow;
         private System.Windows.Forms.Label title;
         private System.Windows.Forms.Label sub;
-        private System.Windows.Forms.Panel pnlControls;
         private Tonyo_sPizza.UI.Controls.RoundedPanel pnlSearch;
         private System.Windows.Forms.Label lblSearchIcon;
         private System.Windows.Forms.TextBox _txtSearch;
+        private System.Windows.Forms.FlowLayoutPanel pnlControls;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnAdd;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnEdit;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnToggle;

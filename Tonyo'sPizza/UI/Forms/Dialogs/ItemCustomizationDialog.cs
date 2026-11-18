@@ -131,7 +131,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(16, 12),
                 Size = new Size(125, 95),
                 SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = AppColors.SurfaceAlt,
                 BorderStyle = BorderStyle.FixedSingle
             };
 
@@ -226,7 +226,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 WrapContents = false,
                 BorderStyle = BorderStyle.FixedSingle,
                 Padding = new Padding(8),
-                BackColor = Color.FromArgb(248, 250, 252)
+                BackColor = AppColors.SurfaceAlt
             };
 
             body.Controls.Add(lblAddOnTitle);
@@ -350,8 +350,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(_existingItem != null ? 102 : 0, 4),
                 Size = new Size(90, 40),
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(241, 245, 249),
-                HoverColor = Color.FromArgb(226, 232, 240),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                PressedColor = AppColors.SecondaryPressed,
                 ForeColor = AppColors.TextDark,
                 Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold)
             };
@@ -383,6 +384,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             Controls.Add(body);
             Controls.Add(bottom);
             Controls.Add(header);
+            CancelButton = _btnCancel;
         }
 
         private void PopulateData()

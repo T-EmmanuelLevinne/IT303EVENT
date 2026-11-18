@@ -41,6 +41,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
         private Panel _pnlActiveSizeBanner;
         private Label _lblRecipeBannerTitle;
         private Label _lblRecipeBannerSub;
+        private RoundedButton _btnConfigureActiveDough;
 
         // Recipe Checkbox Controls (Categorized)
         private FlowLayoutPanel _flpRecipeCategories;
@@ -152,7 +153,8 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Font = new Font("Segoe UI Bold", 12f, FontStyle.Bold),
                 ForeColor = Color.White,
                 Location = new Point(20, 16),
-                AutoSize = true
+                AutoSize = true,
+                UseMnemonic = false
             };
             header.Controls.Add(title);
 
@@ -211,7 +213,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(10, y),
                 Size = new Size(185, 120),
                 SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = AppColors.SurfaceAlt,
                 BorderStyle = BorderStyle.FixedSingle,
                 AllowDrop = true
             };
@@ -224,8 +226,8 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(205, y + 15),
                 Size = new Size(195, 38),
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(71, 85, 105),
-                HoverColor = Color.FromArgb(100, 116, 139)
+                NormalColor = AppColors.TextMedium,
+                HoverColor = AppColors.TextDark
             };
             _btnBrowseImage.Click += BtnBrowseImage_Click;
 
@@ -235,8 +237,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(205, y + 62),
                 Size = new Size(195, 38),
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(226, 232, 240),
-                HoverColor = Color.FromArgb(203, 213, 225),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                PressedColor = AppColors.SecondaryPressed,
                 ForeColor = AppColors.TextDark
             };
             _btnClearImage.Click += (s, e) => { _picPreview.Image = null; _item.ImageBase64 = null; };
@@ -249,7 +252,8 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(10, y),
                 AutoSize = true,
                 Font = new Font("Segoe UI Bold", 10f, FontStyle.Bold),
-                ForeColor = AppColors.PrimaryDark
+                ForeColor = AppColors.PrimaryDark,
+                UseMnemonic = false
             };
             y += 24;
 
@@ -259,7 +263,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Size = new Size(395, 130),
                 AutoScroll = true,
                 WrapContents = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = AppColors.SurfaceAlt,
                 BorderStyle = BorderStyle.FixedSingle,
                 Padding = new Padding(6)
             };
@@ -295,11 +299,24 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             _pnlActiveSizeBanner = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 56,
-                BackColor = Color.FromArgb(254, 242, 242),
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(10, 6, 10, 6),
-                Margin = new Padding(0, 0, 0, 8)
+                Height = 66,
+                BackColor = AppColors.PrimarySoft,
+                BorderStyle = BorderStyle.None,
+                Padding = new Padding(12, 8, 10, 8)
+            };
+            _pnlActiveSizeBanner.Paint += (s, e) =>
+            {
+                Color bdr = !string.IsNullOrEmpty(_currentActiveDoughSize) ? AppColors.PrimaryBorder : AppColors.Border;
+                using (var pen = new Pen(bdr, 1))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, _pnlActiveSizeBanner.Width - 1, _pnlActiveSizeBanner.Height - 1);
+                }
+            };
+
+            Panel pnlBannerText = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.Transparent
             };
 
             _lblRecipeBannerTitle = new Label
@@ -307,8 +324,10 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Text = "Deduction Ingredients for: ...",
                 Font = new Font("Segoe UI Bold", 9.5f, FontStyle.Bold),
                 ForeColor = AppColors.PrimaryDark,
-                Location = new Point(10, 7),
-                AutoSize = true
+                Dock = DockStyle.Top,
+                Height = 22,
+                AutoEllipsis = true,
+                TextAlign = ContentAlignment.MiddleLeft
             };
 
             _lblRecipeBannerSub = new Label
@@ -316,12 +335,71 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Text = "Configure deduction quantities for this dough size. Click other sizes on the left to customize.",
                 Font = new Font("Segoe UI", 8.5f),
                 ForeColor = AppColors.TextMuted,
-                Location = new Point(10, 29),
-                AutoSize = true
+                Dock = DockStyle.Fill,
+                AutoEllipsis = true,
+                TextAlign = ContentAlignment.TopLeft
             };
 
-            _pnlActiveSizeBanner.Controls.Add(_lblRecipeBannerTitle);
-            _pnlActiveSizeBanner.Controls.Add(_lblRecipeBannerSub);
+            pnlBannerText.Controls.Add(_lblRecipeBannerSub);
+            pnlBannerText.Controls.Add(_lblRecipeBannerTitle);
+
+            Panel pnlBannerBtn = new Panel
+            {
+                Dock = DockStyle.Right,
+                Width = 158,
+                Padding = new Padding(8, 8, 2, 8),
+                BackColor = Color.Transparent
+            };
+
+            _btnConfigureActiveDough = new RoundedButton
+            {
+                Text = "Configure Dough",
+                IconName = "edit",
+                Dock = DockStyle.Fill,
+                BorderRadius = 6,
+                NormalColor = AppColors.Primary,
+                HoverColor = AppColors.PrimaryLight,
+                PressedColor = AppColors.PrimaryDark,
+                Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold)
+            };
+            _btnConfigureActiveDough.Click += (s, e) =>
+            {
+                var activeDs = _doughSizes.FirstOrDefault(d => string.Equals(d.SizeName, _currentActiveDoughSize, StringComparison.OrdinalIgnoreCase));
+                if (activeDs != null)
+                {
+                    SaveCurrentRecipeControlsToMemory();
+                    string oldName = activeDs.SizeName;
+                    using (var dlg = new AddEditDoughSizeDialog(activeDs, _allIngredients))
+                    {
+                        if (dlg.ShowDialog() == DialogResult.OK)
+                        {
+                            if (!string.Equals(oldName, activeDs.SizeName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (_recipesBySize.ContainsKey(oldName))
+                                {
+                                    _recipesBySize[activeDs.SizeName] = _recipesBySize[oldName];
+                                    _recipesBySize.Remove(oldName);
+                                }
+                                _currentActiveDoughSize = activeDs.SizeName;
+                            }
+                            BuildDoughSizeCards();
+                            LoadRecipeControlsForActiveSize();
+                        }
+                    }
+                }
+            };
+
+            pnlBannerBtn.Controls.Add(_btnConfigureActiveDough);
+
+            _pnlActiveSizeBanner.Controls.Add(pnlBannerText);
+            _pnlActiveSizeBanner.Controls.Add(pnlBannerBtn);
+
+            Panel pnlBannerSpacer = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 8,
+                BackColor = Color.White
+            };
 
             _flpRecipeCategories = new FlowLayoutPanel
             {
@@ -329,12 +407,17 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 AutoScroll = true,
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
-                Padding = new Padding(4)
+                Padding = new Padding(4),
+                BackColor = Color.White
             };
+            UIHelper.EnableDoubleBuffering(_flpRecipeCategories);
 
+            // Dock layout evaluates Controls from last index (SendToBack) to index 0 (BringToFront),
+            // so Fill MUST remain in front (index 0) while Top banner docks above it cleanly.
             _tabRecipe.Controls.Add(_flpRecipeCategories);
+            _tabRecipe.Controls.Add(pnlBannerSpacer);
             _tabRecipe.Controls.Add(_pnlActiveSizeBanner);
-            _pnlActiveSizeBanner.BringToFront();
+            _flpRecipeCategories.BringToFront();
 
             // TAB 2: Available Add-ons by Category
             _tabAddOns = new TabPage("Available Add-ons (Customer Options)");
@@ -394,8 +477,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Dock = DockStyle.Right,
                 Width = 120,
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(226, 232, 240),
-                HoverColor = Color.FromArgb(203, 213, 225),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                PressedColor = AppColors.SecondaryPressed,
                 ForeColor = AppColors.TextDark
             };
             _btnCancel.Click += (s, e) => Close();
@@ -407,6 +491,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             Controls.Add(mainLayout);
             Controls.Add(bottom);
             Controls.Add(header);
+            CancelButton = _btnCancel;
         }
 
         private void LoadCategories()
@@ -465,7 +550,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 {
                     Width = 180,
                     Height = 52,
-                    BackColor = isSelected ? Color.FromArgb(254, 242, 242) : Color.White,
+                    BackColor = isSelected ? AppColors.PrimarySoft : Color.White,
                     BorderStyle = BorderStyle.FixedSingle,
                     Margin = new Padding(3),
                     Cursor = Cursors.Hand
@@ -484,11 +569,13 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
 
                 Label lblName = new Label
                 {
-                    Text = (isSelected ? "▶ " : "") + $"{ds.SizeName} - ₱{ds.Price:N2}",
-                    Font = new Font("Segoe UI Bold", 8.5f, FontStyle.Bold),
+                    Text = $"{ds.SizeName} - ₱{ds.Price:N2}",
+                    Font = new Font("Segoe UI Bold", 8.25f, FontStyle.Bold),
                     ForeColor = isSelected ? AppColors.PrimaryDark : AppColors.TextDark,
                     Location = new Point(6, 6),
-                    AutoSize = true,
+                    Size = new Size(114, 18),
+                    AutoEllipsis = true,
+                    UseMnemonic = false,
                     Cursor = Cursors.Hand
                 };
 
@@ -500,24 +587,6 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                     Location = new Point(6, 26),
                     AutoSize = true,
                     Cursor = Cursors.Hand
-                };
-
-                Button btnDel = new Button
-                {
-                    Text = "✕",
-                    Width = 24,
-                    Height = 24,
-                    Location = new Point(150, 4),
-                    FlatStyle = FlatStyle.Flat,
-                    ForeColor = Color.Red,
-                    Cursor = Cursors.Hand,
-                    Font = new Font("Segoe UI Bold", 8f, FontStyle.Bold),
-                    BackColor = Color.Transparent
-                };
-                btnDel.FlatAppearance.BorderSize = 0;
-                btnDel.Click += (s, e) =>
-                {
-                    RemoveDoughSizeAt(index);
                 };
 
                 Action editAction = () =>
@@ -544,6 +613,43 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                             LoadRecipeControlsForActiveSize();
                         }
                     }
+                };
+
+                Button btnEdit = new Button
+                {
+                    Text = "",
+                    Width = 24,
+                    Height = 24,
+                    Location = new Point(122, 4),
+                    FlatStyle = FlatStyle.Flat,
+                    ForeColor = AppColors.PrimaryDark,
+                    Cursor = Cursors.Hand,
+                    BackColor = Color.Transparent
+                };
+                btnEdit.FlatAppearance.BorderSize = 0;
+                btnEdit.Paint += (s, e) =>
+                {
+                    UIHelper.SetHighQuality(e.Graphics);
+                    UIHelper.DrawVectorIcon(e.Graphics, "edit", new Rectangle(5, 5, 13, 13), AppColors.PrimaryDark);
+                };
+                btnEdit.Click += (s, e) => editAction();
+
+                Button btnDel = new Button
+                {
+                    Text = "X",
+                    Width = 24,
+                    Height = 24,
+                    Location = new Point(150, 4),
+                    FlatStyle = FlatStyle.Flat,
+                    ForeColor = AppColors.StatusCancelled,
+                    Cursor = Cursors.Hand,
+                    Font = new Font("Segoe UI Bold", 8.25f, FontStyle.Bold),
+                    BackColor = Color.Transparent
+                };
+                btnDel.FlatAppearance.BorderSize = 0;
+                btnDel.Click += (s, e) =>
+                {
+                    RemoveDoughSizeAt(index);
                 };
 
                 MouseEventHandler clickHandler = (s, e) =>
@@ -579,6 +685,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
 
                 card.Controls.Add(lblName);
                 card.Controls.Add(lblSub);
+                card.Controls.Add(btnEdit);
                 card.Controls.Add(btnDel);
                 _flpDoughSizes.Controls.Add(card);
             }
@@ -724,20 +831,25 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
         {
             if (_lblRecipeBannerTitle == null) return;
 
-            if (!string.IsNullOrEmpty(_currentActiveDoughSize))
+            var activeDs = _doughSizes.FirstOrDefault(d => string.Equals(d.SizeName, _currentActiveDoughSize, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrEmpty(_currentActiveDoughSize) && activeDs != null)
             {
-                _lblRecipeBannerTitle.Text = $"Deduction Ingredients for: {_currentActiveDoughSize}";
-                _lblRecipeBannerSub.Text = "Configure deduction quantities for this dough size. Click other sizes on the left to customize.";
-                _pnlActiveSizeBanner.BackColor = Color.FromArgb(254, 242, 242);
+                _lblRecipeBannerTitle.Text = $"Deduction Ingredients for: {activeDs.SizeName} (₱{activeDs.Price:N2})";
+                string doughName = !string.IsNullOrEmpty(activeDs.DoughIngredientName) ? activeDs.DoughIngredientName : "No dough linked";
+                _lblRecipeBannerSub.Text = $"Pizza Dough: {doughName} ({activeDs.DoughPortionQty:N2} portion) · Configure dough or customize recipe.";
+                _pnlActiveSizeBanner.BackColor = AppColors.PrimarySoft;
                 _lblRecipeBannerTitle.ForeColor = AppColors.PrimaryDark;
+                if (_btnConfigureActiveDough != null) _btnConfigureActiveDough.Visible = true;
             }
             else
             {
                 _lblRecipeBannerTitle.Text = "Standard Recipe Ingredients";
                 _lblRecipeBannerSub.Text = "Configure standard deduction quantities for this item.";
-                _pnlActiveSizeBanner.BackColor = Color.FromArgb(241, 245, 249);
+                _pnlActiveSizeBanner.BackColor = AppColors.SurfaceAlt;
                 _lblRecipeBannerTitle.ForeColor = AppColors.TextDark;
+                if (_btnConfigureActiveDough != null) _btnConfigureActiveDough.Visible = false;
             }
+            _pnlActiveSizeBanner.Invalidate();
         }
 
         // ==================== CATEGORIZED RECIPE CHECKBOXES ====================
@@ -761,7 +873,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 {
                     Width = 530,
                     Height = 28,
-                    BackColor = Color.FromArgb(241, 245, 249),
+                    BackColor = AppColors.SurfaceAlt,
                     Margin = new Padding(0, 8, 0, 4)
                 };
                 Label lblGroup = new Label
@@ -880,7 +992,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 {
                     Width = 530,
                     Height = 28,
-                    BackColor = Color.FromArgb(241, 245, 249),
+                    BackColor = AppColors.SurfaceAlt,
                     Margin = new Padding(0, 8, 0, 4)
                 };
                 Label lblGroup = new Label
@@ -1148,9 +1260,13 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 DialogResult = DialogResult.OK;
                 Close();
             }
+            catch (System.Data.DBConcurrencyException cex)
+            {
+                MessageBox.Show(this, cex.Message, "Concurrent Edit Detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving menu item: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Services.ErrorLogger.ShowFriendlyError("Unable to save menu item changes. Please verify your inputs and try again.", ex, "Save Menu Item Error", this);
             }
         }
     }

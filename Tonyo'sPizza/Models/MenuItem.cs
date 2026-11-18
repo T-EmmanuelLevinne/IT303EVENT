@@ -88,6 +88,9 @@ namespace Tonyo_sPizza.Models
             set => _createdAt = value;
         }
 
+        public bool IsActive { get; set; } = true;
+        public byte[] RowVersion { get; set; }
+
         private List<MenuItemIngredient> _recipeIngredients;
         private List<MenuItemDoughSize> _doughSizes;
         private List<MenuItemAddOn> _availableAddOns;

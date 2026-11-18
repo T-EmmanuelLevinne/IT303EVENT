@@ -13,11 +13,13 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
     public class AddEditDoughSizeDialog : Form
     {
         private readonly MenuItemDoughSize _doughSize;
+        private readonly List<Ingredient> _allIngredients;
         private readonly List<Ingredient> _doughIngredients;
 
         private ComboBox _cboSizeName;
         private NumericUpDown _numPrice;
         private ComboBox _cboDoughIngredient;
+        private CheckBox _chkShowAllIngredients;
         private NumericUpDown _numPortion;
         private Label _lblUnit;
         private Label _lblStockStatus;
@@ -33,6 +35,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             _doughSize = doughSize ?? new MenuItemDoughSize();
             var ingRepo = new IngredientRepository();
             var all = allIngredients ?? ingRepo.GetAllIngredients();
+            _allIngredients = all;
             _doughIngredients = all.Where(i => i.CategoryName == "Dough" || i.Name.ToLower().Contains("dough") || i.Name.ToLower().Contains("crust")).ToList();
             if (_doughIngredients.Count == 0) _doughIngredients = all;
 
@@ -43,7 +46,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
         private void InitializeComponent()
         {
             Text = "Configure Dough Size & Crust";
-            Size = new Size(480, 530);
+            Size = new Size(480, 560);
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -122,7 +125,18 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             y += 22;
             _cboDoughIngredient = new ComboBox { Location = new Point(20, y), Width = 415, Font = new Font("Segoe UI", 9.5f), DropDownStyle = ComboBoxStyle.DropDownList };
             _cboDoughIngredient.SelectedIndexChanged += (s, e) => UpdateStockAndDeduction();
-            y += 34;
+            y += 30;
+
+            _chkShowAllIngredients = new CheckBox
+            {
+                Text = "Show all ingredients from inventory",
+                Location = new Point(20, y),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 8.25f),
+                ForeColor = AppColors.TextMuted
+            };
+            _chkShowAllIngredients.CheckedChanged += (s, e) => PopulateDoughIngredientsDropdown();
+            y += 26;
 
             Label lblPortion = new Label { Text = "Dough Portion Required:", Location = new Point(20, y), AutoSize = true, Font = new Font("Segoe UI Semibold", 9f, FontStyle.Bold), ForeColor = AppColors.TextDark };
             y += 22;
@@ -152,6 +166,7 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             content.Controls.Add(_numPrice);
             content.Controls.Add(lblIng);
             content.Controls.Add(_cboDoughIngredient);
+            content.Controls.Add(_chkShowAllIngredients);
             content.Controls.Add(lblPortion);
             content.Controls.Add(_numPortion);
             content.Controls.Add(_lblUnit);
@@ -184,8 +199,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Dock = DockStyle.Right,
                 Width = 100,
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(226, 232, 240),
-                HoverColor = Color.FromArgb(203, 213, 225),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                PressedColor = AppColors.SecondaryPressed,
                 ForeColor = AppColors.TextDark
             };
             _btnCancel.Click += (s, e) => Close();
@@ -197,38 +213,53 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             Controls.Add(content);
             Controls.Add(bottom);
             Controls.Add(header);
+
+            AcceptButton = _btnSave;
+            CancelButton = _btnCancel;
         }
 
         private void PopulateData()
         {
-            _cboDoughIngredient.Items.Clear();
-            foreach (var ing in _doughIngredients)
-            {
-                _cboDoughIngredient.Items.Add(ing);
-            }
-
             if (!string.IsNullOrEmpty(_doughSize.SizeName))
             {
                 _cboSizeName.Text = _doughSize.SizeName;
                 _numPrice.Value = _doughSize.Price > 0 ? _doughSize.Price : 14.99m;
                 _numPortion.Value = _doughSize.DoughPortionQty > 0 ? _doughSize.DoughPortionQty : 1.00m;
                 _chkDefault.Checked = _doughSize.IsDefault;
-
-                if (_doughSize.IngredientId.HasValue)
-                {
-                    for (int i = 0; i < _cboDoughIngredient.Items.Count; i++)
-                    {
-                        if (_cboDoughIngredient.Items[i] is Ingredient ing && ing.IngredientId == _doughSize.IngredientId.Value)
-                        {
-                            _cboDoughIngredient.SelectedIndex = i;
-                            break;
-                        }
-                    }
-                }
             }
             else
             {
                 _cboSizeName.Text = "Medium 12\"";
+            }
+
+            PopulateDoughIngredientsDropdown();
+        }
+
+        private void PopulateDoughIngredientsDropdown()
+        {
+            var currentSelectedId = (_cboDoughIngredient.SelectedItem as Ingredient)?.IngredientId 
+                                    ?? _doughSize.IngredientId;
+
+            _cboDoughIngredient.Items.Clear();
+            var listToUse = (_chkShowAllIngredients != null && _chkShowAllIngredients.Checked) 
+                ? _allIngredients 
+                : _doughIngredients;
+
+            foreach (var ing in listToUse)
+            {
+                _cboDoughIngredient.Items.Add(ing);
+            }
+
+            if (currentSelectedId.HasValue)
+            {
+                for (int i = 0; i < _cboDoughIngredient.Items.Count; i++)
+                {
+                    if (_cboDoughIngredient.Items[i] is Ingredient ing && ing.IngredientId == currentSelectedId.Value)
+                    {
+                        _cboDoughIngredient.SelectedIndex = i;
+                        break;
+                    }
+                }
             }
 
             if (_cboDoughIngredient.SelectedIndex == -1 && _cboDoughIngredient.Items.Count > 0)

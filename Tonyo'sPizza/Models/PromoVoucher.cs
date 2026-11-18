@@ -14,6 +14,7 @@ namespace Tonyo_sPizza.Models
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? ExpiresAt { get; set; }
+        public byte[] RowVersion { get; set; }
 
         public string DisplayDiscount => DiscountType == "Percentage" ? $"{DiscountValue:G29}% OFF" : $"₱{DiscountValue:N2} OFF";
 
@@ -35,7 +36,10 @@ namespace Tonyo_sPizza.Models
 
         public PromoVoucher Clone()
         {
-            return new PromoVoucher(PromoId, Code, Description, DiscountType, DiscountValue, MinOrderAmount, IsActive, CreatedAt, MaxDiscountAmount, ExpiresAt);
+            return new PromoVoucher(PromoId, Code, Description, DiscountType, DiscountValue, MinOrderAmount, IsActive, CreatedAt, MaxDiscountAmount, ExpiresAt)
+            {
+                RowVersion = this.RowVersion != null ? (byte[])this.RowVersion.Clone() : null
+            };
         }
     }
 }

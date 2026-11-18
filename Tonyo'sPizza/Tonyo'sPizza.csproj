@@ -55,6 +55,7 @@
     <Compile Include="Data\Repositories\MenuItemRepository.cs" />
     <Compile Include="Data\Repositories\OrderRepository.cs" />
     <Compile Include="Data\Repositories\PromoVoucherRepository.cs" />
+    <Compile Include="Data\Repositories\StockTransactionRepository.cs" />
     <Compile Include="Data\Repositories\UserRepository.cs" />
     <Compile Include="Models\AuditLog.cs" />
     <Compile Include="Models\Category.cs" />
@@ -67,12 +68,16 @@
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\OrderItem.cs" />
     <Compile Include="Models\PromoVoucher.cs" />
+    <Compile Include="Models\StockTransaction.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\AuditService.cs" />
     <Compile Include="Services\AuthService.cs" />
+    <Compile Include="Services\BackupService.cs" />
+    <Compile Include="Services\ErrorLogger.cs" />
     <Compile Include="Services\OrderService.cs" />
+    <Compile Include="Services\ReceiptPrintService.cs" />
     <Compile Include="Services\StockService.cs" />
     <Compile Include="Services\UserService.cs" />
     <Compile Include="UI\Controls\CartItemControl.cs">
@@ -83,6 +88,9 @@
     </Compile>
     <Compile Include="UI\Controls\FoodCardControl.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ModernContextMenu.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\Controls\ModernInputField.cs">
       <SubType>UserControl</SubType>
@@ -111,6 +119,12 @@
     <Compile Include="UI\Forms\Dialogs\AddEditPromoDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\Forms\Dialogs\AddEditUserDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\ConfirmOrderDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UI\Forms\Dialogs\ConfirmRoleChangeDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -118,6 +132,15 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\Forms\Dialogs\ItemCustomizationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\PizzaIngredientsStockDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\ReceiptPreviewDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Dialogs\ResetPasswordDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\Forms\Dialogs\RestockDialogForm.cs">
@@ -137,11 +160,23 @@
     <Compile Include="UI\Views\Admin\AdminAuditControl.Designer.cs">
       <DependentUpon>AdminAuditControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\Views\Admin\AdminBackupControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminBackupControl.Designer.cs">
+      <DependentUpon>AdminBackupControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\Views\Admin\AdminCategoryControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UI\Views\Admin\AdminCategoryControl.Designer.cs">
       <DependentUpon>AdminCategoryControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminDashboardControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Views\Admin\AdminDashboardControl.Designer.cs">
+      <DependentUpon>AdminDashboardControl.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Views\Admin\AdminMenuControl.cs">
       <SubType>UserControl</SubType>

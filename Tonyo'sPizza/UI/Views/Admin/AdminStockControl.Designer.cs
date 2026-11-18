@@ -18,6 +18,11 @@ namespace Tonyo_sPizza.UI.Views.Admin
         private void InitializeComponent()
         {
             this.topPanel = new System.Windows.Forms.Panel();
+            this.pnlTopHeaderRow = new System.Windows.Forms.Panel();
+            this.title = new System.Windows.Forms.Label();
+            this._btnTabInventory = new Tonyo_sPizza.UI.Controls.RoundedButton();
+            this._btnTabTransactions = new Tonyo_sPizza.UI.Controls.RoundedButton();
+            this._lblPendingChangesBanner = new System.Windows.Forms.Label();
             this.flpActions = new System.Windows.Forms.FlowLayoutPanel();
             this.pnlSearch = new Tonyo_sPizza.UI.Controls.RoundedPanel();
             this._txtSearch = new System.Windows.Forms.TextBox();
@@ -25,318 +30,260 @@ namespace Tonyo_sPizza.UI.Views.Admin
             this.pnlCatFilter = new System.Windows.Forms.Panel();
             this._cboCategoryFilter = new System.Windows.Forms.ComboBox();
             this.lblCat = new System.Windows.Forms.Label();
+            this._chkShowArchived = new System.Windows.Forms.CheckBox();
             this._btnAddIngredient = new Tonyo_sPizza.UI.Controls.RoundedButton();
             this._btnRestock = new Tonyo_sPizza.UI.Controls.RoundedButton();
             this._btnEdit = new Tonyo_sPizza.UI.Controls.RoundedButton();
+            this._btnArchiveToggle = new Tonyo_sPizza.UI.Controls.RoundedButton();
             this._btnDelete = new Tonyo_sPizza.UI.Controls.RoundedButton();
-            this._lblPendingChangesBanner = new System.Windows.Forms.Label();
-            this.title = new System.Windows.Forms.Label();
+            this._btnVoidTransaction = new Tonyo_sPizza.UI.Controls.RoundedButton();
+            this._btnRefreshTx = new Tonyo_sPizza.UI.Controls.RoundedButton();
+
+            this.pnlGridContainer = new Tonyo_sPizza.UI.Controls.RoundedPanel();
             this._dgvStock = new System.Windows.Forms.DataGridView();
+            this._dgvTransactions = new System.Windows.Forms.DataGridView();
             this._bottomPanel = new System.Windows.Forms.Panel();
             this._btnSaveChanges = new Tonyo_sPizza.UI.Controls.RoundedButton();
             this._btnCancelChanges = new Tonyo_sPizza.UI.Controls.RoundedButton();
+
             this.topPanel.SuspendLayout();
+            this.pnlTopHeaderRow.SuspendLayout();
             this.flpActions.SuspendLayout();
             this.pnlSearch.SuspendLayout();
             this.pnlCatFilter.SuspendLayout();
+            this.pnlGridContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this._dgvStock)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this._dgvTransactions)).BeginInit();
             this._bottomPanel.SuspendLayout();
             this.SuspendLayout();
-            // 
+
             // topPanel
-            // 
             this.topPanel.Controls.Add(this.flpActions);
             this.topPanel.Controls.Add(this._lblPendingChangesBanner);
-            this.topPanel.Controls.Add(this.title);
+            this.topPanel.Controls.Add(this.pnlTopHeaderRow);
             this.topPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.topPanel.Location = new System.Drawing.Point(24, 24);
-            this.topPanel.Name = "topPanel";
-            this.topPanel.Size = new System.Drawing.Size(1477, 86);
-            this.topPanel.TabIndex = 0;
-            // 
-            // flpActions
-            // 
+            this.topPanel.Height = 132;
+            this.topPanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 6);
+
+            this.pnlTopHeaderRow.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlTopHeaderRow.Height = 42;
+
+            this.title.AutoSize = true;
+            this.title.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
+            this.title.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
+            this.title.Location = new System.Drawing.Point(0, 2);
+            this.title.Text = "Ingredient Inventory & Stock Ledger";
+            this.title.UseMnemonic = false;
+
+            this._btnTabTransactions.Text = "Stock Transactions";
+            this._btnTabTransactions.IconName = "orders";
+            this._btnTabTransactions.Size = new System.Drawing.Size(162, 34);
+            this._btnTabTransactions.Dock = System.Windows.Forms.DockStyle.Right;
+            this._btnTabTransactions.BorderRadius = 8;
+
+            this._btnTabInventory.Text = "Current Inventory";
+            this._btnTabInventory.IconName = "stock";
+            this._btnTabInventory.Size = new System.Drawing.Size(156, 34);
+            this._btnTabInventory.Dock = System.Windows.Forms.DockStyle.Right;
+            this._btnTabInventory.BorderRadius = 8;
+
+            this.pnlTopHeaderRow.Controls.Add(this.title);
+            this.pnlTopHeaderRow.Controls.Add(this._btnTabTransactions);
+            this.pnlTopHeaderRow.Controls.Add(new System.Windows.Forms.Panel { Dock = System.Windows.Forms.DockStyle.Right, Width = 8 });
+            this.pnlTopHeaderRow.Controls.Add(this._btnTabInventory);
+
+            // Pending Banner
+            this._lblPendingChangesBanner.Dock = System.Windows.Forms.DockStyle.Top;
+            this._lblPendingChangesBanner.Height = 20;
+            this._lblPendingChangesBanner.Font = new System.Drawing.Font("Segoe UI Semibold", 8.75F, System.Drawing.FontStyle.Bold);
+            this._lblPendingChangesBanner.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.StatusPending;
+            this._lblPendingChangesBanner.Text = "Unsaved stock changes pending. Click 'Save Changes' or 'Cancel Changes' below.";
+            this._lblPendingChangesBanner.Visible = false;
+
+            // Actions Bar
+            this.flpActions.Dock = System.Windows.Forms.DockStyle.Top;
+            this.flpActions.AutoSize = true;
+            this.flpActions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flpActions.WrapContents = true;
+            this.flpActions.AutoScroll = false;
+            this.flpActions.Padding = new System.Windows.Forms.Padding(0, 6, 0, 2);
+
+            this.pnlSearch.BackColor = System.Drawing.Color.White;
+            this.pnlSearch.BorderRadius = 8;
+            this.pnlSearch.Margin = new System.Windows.Forms.Padding(0, 0, 8, 6);
+            this.pnlSearch.Size = new System.Drawing.Size(210, 34);
+            this.lblSearchIcon.Location = new System.Drawing.Point(9, 9);
+            this.lblSearchIcon.Size = new System.Drawing.Size(16, 16);
+            this._txtSearch.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this._txtSearch.Font = new System.Drawing.Font("Segoe UI", 9.25F);
+            this._txtSearch.Location = new System.Drawing.Point(30, 8);
+            this._txtSearch.Size = new System.Drawing.Size(170, 17);
+            this.pnlSearch.Controls.Add(this._txtSearch);
+            this.pnlSearch.Controls.Add(this.lblSearchIcon);
+
+            this.pnlCatFilter.Size = new System.Drawing.Size(178, 34);
+            this.pnlCatFilter.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+            this.lblCat.AutoSize = true;
+            this.lblCat.Font = new System.Drawing.Font("Segoe UI Semibold", 8.5F, System.Drawing.FontStyle.Bold);
+            this.lblCat.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMedium;
+            this.lblCat.Location = new System.Drawing.Point(0, 9);
+            this.lblCat.Text = "Category:";
+            this._cboCategoryFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._cboCategoryFilter.Font = new System.Drawing.Font("Segoe UI", 9.25F);
+            this._cboCategoryFilter.Location = new System.Drawing.Point(62, 5);
+            this._cboCategoryFilter.Size = new System.Drawing.Size(114, 25);
+            this.pnlCatFilter.Controls.Add(this._cboCategoryFilter);
+            this.pnlCatFilter.Controls.Add(this.lblCat);
+
+            this._chkShowArchived.Text = "Archived";
+            this._chkShowArchived.AutoSize = true;
+            this._chkShowArchived.Font = new System.Drawing.Font("Segoe UI", 8.75F);
+            this._chkShowArchived.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMedium;
+            this._chkShowArchived.Margin = new System.Windows.Forms.Padding(2, 8, 10, 0);
+
+            this._btnAddIngredient.Text = "Add Ingredient";
+            this._btnAddIngredient.IconName = "add";
+            this._btnAddIngredient.Size = new System.Drawing.Size(134, 34);
+            this._btnAddIngredient.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            this._btnAddIngredient.BorderRadius = 7;
+            this._btnAddIngredient.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.Primary;
+            this._btnAddIngredient.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryLight;
+
+            this._btnRestock.Text = "Restock";
+            this._btnRestock.IconName = "restock";
+            this._btnRestock.Size = new System.Drawing.Size(102, 34);
+            this._btnRestock.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            this._btnRestock.BorderRadius = 7;
+            this._btnRestock.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.StatusCompleted;
+            this._btnRestock.HoverColor = System.Drawing.Color.FromArgb(22, 163, 74);
+
+            this._btnEdit.Text = "Edit";
+            this._btnEdit.IconName = "edit";
+            this._btnEdit.Size = new System.Drawing.Size(80, 34);
+            this._btnEdit.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            this._btnEdit.BorderRadius = 7;
+            this._btnEdit.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryNormal;
+            this._btnEdit.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryHover;
+            this._btnEdit.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
+
+            this._btnArchiveToggle.Text = "Archive";
+            this._btnArchiveToggle.IconName = "archive";
+            this._btnArchiveToggle.Size = new System.Drawing.Size(96, 34);
+            this._btnArchiveToggle.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            this._btnArchiveToggle.BorderRadius = 7;
+            this._btnArchiveToggle.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.StatusPendingBg;
+            this._btnArchiveToggle.HoverColor = System.Drawing.Color.FromArgb(253, 230, 138);
+            this._btnArchiveToggle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.StatusPending;
+
+            this._btnDelete.Text = "Delete";
+            this._btnDelete.IconName = "delete";
+            this._btnDelete.Size = new System.Drawing.Size(88, 34);
+            this._btnDelete.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            this._btnDelete.BorderRadius = 7;
+            this._btnDelete.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.StatusCancelledBg;
+            this._btnDelete.HoverColor = System.Drawing.Color.FromArgb(254, 202, 202);
+            this._btnDelete.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.StatusCancelled;
+
+            this._btnVoidTransaction.Text = "Void Transaction";
+            this._btnVoidTransaction.IconName = "delete";
+            this._btnVoidTransaction.Size = new System.Drawing.Size(148, 34);
+            this._btnVoidTransaction.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            this._btnVoidTransaction.BorderRadius = 7;
+            this._btnVoidTransaction.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.StatusCancelledBg;
+            this._btnVoidTransaction.HoverColor = System.Drawing.Color.FromArgb(254, 202, 202);
+            this._btnVoidTransaction.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.StatusCancelled;
+            this._btnVoidTransaction.Visible = false;
+
+            this._btnRefreshTx.Text = "Refresh";
+            this._btnRefreshTx.IconName = "refresh";
+            this._btnRefreshTx.Size = new System.Drawing.Size(98, 34);
+            this._btnRefreshTx.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
+            this._btnRefreshTx.BorderRadius = 7;
+            this._btnRefreshTx.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryNormal;
+            this._btnRefreshTx.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryHover;
+            this._btnRefreshTx.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
+            this._btnRefreshTx.Visible = false;
+
             this.flpActions.Controls.Add(this.pnlSearch);
             this.flpActions.Controls.Add(this.pnlCatFilter);
+            this.flpActions.Controls.Add(this._chkShowArchived);
             this.flpActions.Controls.Add(this._btnAddIngredient);
             this.flpActions.Controls.Add(this._btnRestock);
             this.flpActions.Controls.Add(this._btnEdit);
+            this.flpActions.Controls.Add(this._btnArchiveToggle);
             this.flpActions.Controls.Add(this._btnDelete);
-            this.flpActions.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.flpActions.Location = new System.Drawing.Point(0, 52);
-            this.flpActions.Name = "flpActions";
-            this.flpActions.Size = new System.Drawing.Size(1477, 34);
-            this.flpActions.TabIndex = 2;
-            this.flpActions.WrapContents = false;
-            // 
-            // pnlSearch
-            // 
-            this.pnlSearch.BackColor = System.Drawing.Color.White;
-            this.pnlSearch.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.pnlSearch.BorderRadius = 8;
-            this.pnlSearch.BorderWidth = 1;
-            this.pnlSearch.Controls.Add(this._txtSearch);
-            this.pnlSearch.Controls.Add(this.lblSearchIcon);
-            this.pnlSearch.DrawBorder = true;
-            this.pnlSearch.GradientAngle = 90F;
-            this.pnlSearch.GradientEndColor = System.Drawing.Color.Empty;
-            this.pnlSearch.GradientStartColor = System.Drawing.Color.Empty;
-            this.pnlSearch.Location = new System.Drawing.Point(0, 0);
-            this.pnlSearch.Margin = new System.Windows.Forms.Padding(0, 0, 10, 0);
-            this.pnlSearch.Name = "pnlSearch";
-            this.pnlSearch.Size = new System.Drawing.Size(220, 36);
-            this.pnlSearch.TabIndex = 0;
-            // 
-            // _txtSearch
-            // 
-            this._txtSearch.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this._txtSearch.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this._txtSearch.Location = new System.Drawing.Point(32, 9);
-            this._txtSearch.Name = "_txtSearch";
-            this._txtSearch.Size = new System.Drawing.Size(180, 17);
-            this._txtSearch.TabIndex = 1;
-            // 
-            // lblSearchIcon
-            // 
-            this.lblSearchIcon.Location = new System.Drawing.Point(8, 9);
-            this.lblSearchIcon.Name = "lblSearchIcon";
-            this.lblSearchIcon.Size = new System.Drawing.Size(18, 18);
-            this.lblSearchIcon.TabIndex = 0;
-            // 
-            // pnlCatFilter
-            // 
-            this.pnlCatFilter.Controls.Add(this._cboCategoryFilter);
-            this.pnlCatFilter.Controls.Add(this.lblCat);
-            this.pnlCatFilter.Location = new System.Drawing.Point(230, 0);
-            this.pnlCatFilter.Margin = new System.Windows.Forms.Padding(0, 0, 10, 0);
-            this.pnlCatFilter.Name = "pnlCatFilter";
-            this.pnlCatFilter.Size = new System.Drawing.Size(185, 36);
-            this.pnlCatFilter.TabIndex = 1;
-            // 
-            // _cboCategoryFilter
-            // 
-            this._cboCategoryFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this._cboCategoryFilter.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this._cboCategoryFilter.FormattingEnabled = true;
-            this._cboCategoryFilter.Location = new System.Drawing.Point(62, 6);
-            this._cboCategoryFilter.Name = "_cboCategoryFilter";
-            this._cboCategoryFilter.Size = new System.Drawing.Size(120, 25);
-            this._cboCategoryFilter.TabIndex = 1;
-            // 
-            // lblCat
-            // 
-            this.lblCat.AutoSize = true;
-            this.lblCat.Font = new System.Drawing.Font("Segoe UI Semibold", 8.5F, System.Drawing.FontStyle.Bold);
-            this.lblCat.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.lblCat.Location = new System.Drawing.Point(0, 9);
-            this.lblCat.Name = "lblCat";
-            this.lblCat.Size = new System.Drawing.Size(57, 15);
-            this.lblCat.TabIndex = 0;
-            this.lblCat.Text = "Category:";
-            // 
-            // _btnAddIngredient
-            // 
-            this._btnAddIngredient.BackColor = System.Drawing.Color.Transparent;
-            this._btnAddIngredient.BorderRadius = 8;
-            this._btnAddIngredient.Cursor = System.Windows.Forms.Cursors.Hand;
-            this._btnAddIngredient.CustomBorderColor = System.Drawing.Color.Transparent;
-            this._btnAddIngredient.CustomBorderWidth = 0;
-            this._btnAddIngredient.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this._btnAddIngredient.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnAddIngredient.ForeColor = System.Drawing.Color.White;
-            this._btnAddIngredient.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(249)))), ((int)(((byte)(115)))), ((int)(((byte)(22)))));
-            this._btnAddIngredient.IconName = "add";
-            this._btnAddIngredient.Location = new System.Drawing.Point(428, 3);
-            this._btnAddIngredient.Name = "_btnAddIngredient";
-            this._btnAddIngredient.NormalColor = System.Drawing.Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(88)))), ((int)(((byte)(12)))));
-            this._btnAddIngredient.PressedColor = System.Drawing.Color.FromArgb(((int)(((byte)(159)))), ((int)(((byte)(18)))), ((int)(((byte)(57)))));
-            this._btnAddIngredient.Size = new System.Drawing.Size(145, 31);
-            this._btnAddIngredient.TabIndex = 2;
-            this._btnAddIngredient.Text = "Add Ingredient";
-            this._btnAddIngredient.UseVisualStyleBackColor = false;
-            // 
-            // _btnRestock
-            // 
-            this._btnRestock.BackColor = System.Drawing.Color.Transparent;
-            this._btnRestock.BorderRadius = 8;
-            this._btnRestock.Cursor = System.Windows.Forms.Cursors.Hand;
-            this._btnRestock.CustomBorderColor = System.Drawing.Color.Transparent;
-            this._btnRestock.CustomBorderWidth = 0;
-            this._btnRestock.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this._btnRestock.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnRestock.ForeColor = System.Drawing.Color.White;
-            this._btnRestock.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(197)))), ((int)(((byte)(94)))));
-            this._btnRestock.IconName = "restock";
-            this._btnRestock.Location = new System.Drawing.Point(579, 3);
-            this._btnRestock.Name = "_btnRestock";
-            this._btnRestock.NormalColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))));
-            this._btnRestock.PressedColor = System.Drawing.Color.FromArgb(((int)(((byte)(159)))), ((int)(((byte)(18)))), ((int)(((byte)(57)))));
-            this._btnRestock.Size = new System.Drawing.Size(155, 31);
-            this._btnRestock.TabIndex = 3;
-            this._btnRestock.Text = "Restock Selected";
-            this._btnRestock.UseVisualStyleBackColor = false;
-            // 
-            // _btnEdit
-            // 
-            this._btnEdit.BackColor = System.Drawing.Color.Transparent;
-            this._btnEdit.BorderRadius = 8;
-            this._btnEdit.Cursor = System.Windows.Forms.Cursors.Hand;
-            this._btnEdit.CustomBorderColor = System.Drawing.Color.Transparent;
-            this._btnEdit.CustomBorderWidth = 0;
-            this._btnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this._btnEdit.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnEdit.ForeColor = System.Drawing.Color.White;
-            this._btnEdit.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(116)))), ((int)(((byte)(139)))));
-            this._btnEdit.IconName = "edit";
-            this._btnEdit.Location = new System.Drawing.Point(740, 3);
-            this._btnEdit.Name = "_btnEdit";
-            this._btnEdit.NormalColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this._btnEdit.PressedColor = System.Drawing.Color.FromArgb(((int)(((byte)(159)))), ((int)(((byte)(18)))), ((int)(((byte)(57)))));
-            this._btnEdit.Size = new System.Drawing.Size(130, 31);
-            this._btnEdit.TabIndex = 4;
-            this._btnEdit.Text = "Edit Selected";
-            this._btnEdit.UseVisualStyleBackColor = false;
-            // 
-            // _btnDelete
-            // 
-            this._btnDelete.BackColor = System.Drawing.Color.Transparent;
-            this._btnDelete.BorderRadius = 8;
-            this._btnDelete.Cursor = System.Windows.Forms.Cursors.Hand;
-            this._btnDelete.CustomBorderColor = System.Drawing.Color.Transparent;
-            this._btnDelete.CustomBorderWidth = 0;
-            this._btnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this._btnDelete.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnDelete.ForeColor = System.Drawing.Color.White;
-            this._btnDelete.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(38)))), ((int)(((byte)(38)))));
-            this._btnDelete.IconName = "delete";
-            this._btnDelete.Location = new System.Drawing.Point(876, 3);
-            this._btnDelete.Name = "_btnDelete";
-            this._btnDelete.NormalColor = System.Drawing.Color.FromArgb(((int)(((byte)(239)))), ((int)(((byte)(68)))), ((int)(((byte)(68)))));
-            this._btnDelete.PressedColor = System.Drawing.Color.FromArgb(((int)(((byte)(159)))), ((int)(((byte)(18)))), ((int)(((byte)(57)))));
-            this._btnDelete.Size = new System.Drawing.Size(110, 31);
-            this._btnDelete.TabIndex = 5;
-            this._btnDelete.Text = "Delete";
-            this._btnDelete.UseVisualStyleBackColor = false;
-            // 
-            // _lblPendingChangesBanner
-            // 
-            this._lblPendingChangesBanner.AutoSize = true;
-            this._lblPendingChangesBanner.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._lblPendingChangesBanner.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(158)))), ((int)(((byte)(11)))));
-            this._lblPendingChangesBanner.Location = new System.Drawing.Point(0, 32);
-            this._lblPendingChangesBanner.Name = "_lblPendingChangesBanner";
-            this._lblPendingChangesBanner.Size = new System.Drawing.Size(478, 17);
-            this._lblPendingChangesBanner.TabIndex = 1;
-            this._lblPendingChangesBanner.Text = "You have unsaved changes in stock! Click \'Save Changes\' or \'Cancel Changes\'.";
-            this._lblPendingChangesBanner.Visible = false;
-            // 
-            // title
-            // 
-            this.title.AutoSize = true;
-            this.title.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
-            this.title.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.title.Location = new System.Drawing.Point(0, 4);
-            this.title.Name = "title";
-            this.title.Size = new System.Drawing.Size(284, 25);
-            this.title.TabIndex = 0;
-            this.title.Text = "Ingredient Stock Management";
-            this.title.Click += new System.EventHandler(this.title_Click_1);
-            // 
-            // _dgvStock
-            // 
+            this.flpActions.Controls.Add(this._btnVoidTransaction);
+            this.flpActions.Controls.Add(this._btnRefreshTx);
+
+            // Grid Container
+            this.pnlGridContainer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlGridContainer.BorderRadius = 12;
+            this.pnlGridContainer.Padding = new System.Windows.Forms.Padding(12);
             this._dgvStock.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._dgvStock.Location = new System.Drawing.Point(24, 110);
-            this._dgvStock.MultiSelect = false;
-            this._dgvStock.Name = "_dgvStock";
-            this._dgvStock.ReadOnly = true;
-            this._dgvStock.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this._dgvStock.Size = new System.Drawing.Size(1477, 517);
-            this._dgvStock.TabIndex = 1;
-            this._dgvStock.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this._dgvStock_CellContentClick_1);
-            // 
-            // _bottomPanel
-            // 
-            this._bottomPanel.Controls.Add(this._btnSaveChanges);
-            this._bottomPanel.Controls.Add(this._btnCancelChanges);
+            this._dgvTransactions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._dgvTransactions.Visible = false;
+
+            this.pnlGridContainer.Controls.Add(this._dgvStock);
+            this.pnlGridContainer.Controls.Add(this._dgvTransactions);
+
+            // Bottom Save Panel
             this._bottomPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this._bottomPanel.Location = new System.Drawing.Point(24, 627);
-            this._bottomPanel.Name = "_bottomPanel";
+            this._bottomPanel.Height = 56;
             this._bottomPanel.Padding = new System.Windows.Forms.Padding(0, 12, 0, 0);
-            this._bottomPanel.Size = new System.Drawing.Size(1477, 60);
-            this._bottomPanel.TabIndex = 2;
             this._bottomPanel.Visible = false;
-            // 
-            // _btnSaveChanges
-            // 
-            this._btnSaveChanges.BackColor = System.Drawing.Color.Transparent;
-            this._btnSaveChanges.BorderRadius = 8;
-            this._btnSaveChanges.Cursor = System.Windows.Forms.Cursors.Hand;
-            this._btnSaveChanges.CustomBorderColor = System.Drawing.Color.Transparent;
-            this._btnSaveChanges.CustomBorderWidth = 0;
-            this._btnSaveChanges.Dock = System.Windows.Forms.DockStyle.Right;
-            this._btnSaveChanges.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this._btnSaveChanges.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this._btnSaveChanges.ForeColor = System.Drawing.Color.White;
-            this._btnSaveChanges.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(249)))), ((int)(((byte)(115)))), ((int)(((byte)(22)))));
-            this._btnSaveChanges.IconName = null;
-            this._btnSaveChanges.Location = new System.Drawing.Point(1297, 12);
-            this._btnSaveChanges.Name = "_btnSaveChanges";
-            this._btnSaveChanges.NormalColor = System.Drawing.Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(88)))), ((int)(((byte)(12)))));
-            this._btnSaveChanges.PressedColor = System.Drawing.Color.FromArgb(((int)(((byte)(159)))), ((int)(((byte)(18)))), ((int)(((byte)(57)))));
-            this._btnSaveChanges.Size = new System.Drawing.Size(180, 48);
-            this._btnSaveChanges.TabIndex = 0;
+
             this._btnSaveChanges.Text = "Save Changes";
-            this._btnSaveChanges.UseVisualStyleBackColor = false;
-            // 
-            // _btnCancelChanges
-            // 
-            this._btnCancelChanges.BackColor = System.Drawing.Color.Transparent;
-            this._btnCancelChanges.BorderRadius = 8;
-            this._btnCancelChanges.Cursor = System.Windows.Forms.Cursors.Hand;
-            this._btnCancelChanges.CustomBorderColor = System.Drawing.Color.Transparent;
-            this._btnCancelChanges.CustomBorderWidth = 0;
-            this._btnCancelChanges.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this._btnCancelChanges.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this._btnCancelChanges.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this._btnCancelChanges.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this._btnCancelChanges.IconName = null;
-            this._btnCancelChanges.Location = new System.Drawing.Point(1120, 12);
-            this._btnCancelChanges.Name = "_btnCancelChanges";
-            this._btnCancelChanges.NormalColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this._btnCancelChanges.PressedColor = System.Drawing.Color.FromArgb(((int)(((byte)(159)))), ((int)(((byte)(18)))), ((int)(((byte)(57)))));
-            this._btnCancelChanges.Size = new System.Drawing.Size(160, 48);
-            this._btnCancelChanges.TabIndex = 1;
+            this._btnSaveChanges.Dock = System.Windows.Forms.DockStyle.Right;
+            this._btnSaveChanges.Size = new System.Drawing.Size(160, 42);
+            this._btnSaveChanges.BorderRadius = 8;
+            this._btnSaveChanges.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.Primary;
+            this._btnSaveChanges.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryLight;
+
             this._btnCancelChanges.Text = "Cancel Changes";
-            this._btnCancelChanges.UseVisualStyleBackColor = false;
-            // 
-            // AdminStockControl
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(250)))), ((int)(((byte)(252)))));
-            this.Controls.Add(this._dgvStock);
+            this._btnCancelChanges.Dock = System.Windows.Forms.DockStyle.Right;
+            this._btnCancelChanges.Size = new System.Drawing.Size(140, 42);
+            this._btnCancelChanges.BorderRadius = 8;
+            this._btnCancelChanges.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryNormal;
+            this._btnCancelChanges.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.SecondaryHover;
+            this._btnCancelChanges.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
+
+            this._bottomPanel.Controls.Add(this._btnSaveChanges);
+            this._bottomPanel.Controls.Add(new System.Windows.Forms.Panel { Dock = System.Windows.Forms.DockStyle.Right, Width = 10 });
+            this._bottomPanel.Controls.Add(this._btnCancelChanges);
+
+            this.BackColor = Tonyo_sPizza.UI.Theme.AppColors.Background;
+            this.Controls.Add(this.pnlGridContainer);
             this.Controls.Add(this._bottomPanel);
             this.Controls.Add(this.topPanel);
+            this.Dock = System.Windows.Forms.DockStyle.Fill;
             this.Name = "AdminStockControl";
-            this.Padding = new System.Windows.Forms.Padding(24);
-            this.Size = new System.Drawing.Size(1525, 711);
+            this.Padding = new System.Windows.Forms.Padding(24, 20, 24, 20);
+            this.Size = new System.Drawing.Size(1400, 711);
+
             this.topPanel.ResumeLayout(false);
             this.topPanel.PerformLayout();
+            this.pnlTopHeaderRow.ResumeLayout(false);
+            this.pnlTopHeaderRow.PerformLayout();
             this.flpActions.ResumeLayout(false);
+            this.flpActions.PerformLayout();
             this.pnlSearch.ResumeLayout(false);
             this.pnlSearch.PerformLayout();
             this.pnlCatFilter.ResumeLayout(false);
             this.pnlCatFilter.PerformLayout();
+            this.pnlGridContainer.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this._dgvStock)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this._dgvTransactions)).EndInit();
             this._bottomPanel.ResumeLayout(false);
             this.ResumeLayout(false);
-
         }
 
         #endregion
 
         private System.Windows.Forms.Panel topPanel;
+        private System.Windows.Forms.Panel pnlTopHeaderRow;
         private System.Windows.Forms.Label title;
+        private Tonyo_sPizza.UI.Controls.RoundedButton _btnTabInventory;
+        private Tonyo_sPizza.UI.Controls.RoundedButton _btnTabTransactions;
         private System.Windows.Forms.Label _lblPendingChangesBanner;
         private System.Windows.Forms.FlowLayoutPanel flpActions;
         private Tonyo_sPizza.UI.Controls.RoundedPanel pnlSearch;
@@ -345,11 +292,17 @@ namespace Tonyo_sPizza.UI.Views.Admin
         private System.Windows.Forms.Panel pnlCatFilter;
         private System.Windows.Forms.Label lblCat;
         private System.Windows.Forms.ComboBox _cboCategoryFilter;
+        private System.Windows.Forms.CheckBox _chkShowArchived;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnAddIngredient;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnRestock;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnEdit;
+        private Tonyo_sPizza.UI.Controls.RoundedButton _btnArchiveToggle;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnDelete;
+        private Tonyo_sPizza.UI.Controls.RoundedButton _btnVoidTransaction;
+        private Tonyo_sPizza.UI.Controls.RoundedButton _btnRefreshTx;
+        private Tonyo_sPizza.UI.Controls.RoundedPanel pnlGridContainer;
         private System.Windows.Forms.DataGridView _dgvStock;
+        private System.Windows.Forms.DataGridView _dgvTransactions;
         private System.Windows.Forms.Panel _bottomPanel;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnSaveChanges;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnCancelChanges;

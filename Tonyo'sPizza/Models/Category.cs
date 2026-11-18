@@ -45,6 +45,9 @@ namespace Tonyo_sPizza.Models
             set => _createdAt = value;
         }
 
+        public bool IsActive { get; set; } = true;
+        public byte[] RowVersion { get; set; }
+
         public Category()
         {
             _createdAt = DateTime.Now;

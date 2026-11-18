@@ -32,6 +32,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             this._lblSubtotal = new System.Windows.Forms.Label();
             this.lblSubTitle = new System.Windows.Forms.Label();
             this.pnlPromo = new System.Windows.Forms.Panel();
+            this.pnlPromoBox = new Tonyo_sPizza.UI.Controls.RoundedPanel();
             this._btnApplyPromo = new Tonyo_sPizza.UI.Controls.RoundedButton();
             this._txtPromoCode = new System.Windows.Forms.TextBox();
             this.pnlOrderHeader = new System.Windows.Forms.Panel();
@@ -103,10 +104,10 @@ namespace Tonyo_sPizza.UI.Views.Customer
             this.pnlBottomCheckout.Controls.Add(this.pnlTotals);
             this.pnlBottomCheckout.Controls.Add(this.pnlPromo);
             this.pnlBottomCheckout.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlBottomCheckout.Location = new System.Drawing.Point(16, 393);
+            this.pnlBottomCheckout.Location = new System.Drawing.Point(16, 438);
             this.pnlBottomCheckout.Name = "pnlBottomCheckout";
-            this.pnlBottomCheckout.Padding = new System.Windows.Forms.Padding(0, 8, 0, 0);
-            this.pnlBottomCheckout.Size = new System.Drawing.Size(288, 245);
+            this.pnlBottomCheckout.Padding = new System.Windows.Forms.Padding(0, 6, 0, 2);
+            this.pnlBottomCheckout.Size = new System.Drawing.Size(288, 200);
             this.pnlBottomCheckout.TabIndex = 4;
             // 
             // _btnCheckout
@@ -115,10 +116,11 @@ namespace Tonyo_sPizza.UI.Views.Customer
             this._btnCheckout.Dock = System.Windows.Forms.DockStyle.Bottom;
             this._btnCheckout.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
             this._btnCheckout.ForeColor = System.Drawing.Color.White;
-            this._btnCheckout.Location = new System.Drawing.Point(0, 201);
+            this._btnCheckout.Location = new System.Drawing.Point(0, 154);
             this._btnCheckout.Name = "_btnCheckout";
-            this._btnCheckout.NormalColor = System.Drawing.Color.FromArgb(234, 88, 12);
-            this._btnCheckout.HoverColor = System.Drawing.Color.FromArgb(249, 115, 22);
+            this._btnCheckout.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.Primary;
+            this._btnCheckout.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryLight;
+            this._btnCheckout.PressedColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryDark;
             this._btnCheckout.Size = new System.Drawing.Size(288, 44);
             this._btnCheckout.TabIndex = 2;
             this._btnCheckout.Text = "Checkout Selected";
@@ -144,7 +146,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // _lblTotal
             // 
             this._lblTotal.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
-            this._lblTotal.ForeColor = System.Drawing.Color.FromArgb(194, 65, 12);
+            this._lblTotal.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryDark;
             this._lblTotal.Location = new System.Drawing.Point(140, 78);
             this._lblTotal.Name = "_lblTotal";
             this._lblTotal.Size = new System.Drawing.Size(145, 24);
@@ -156,7 +158,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.lblTotTitle.AutoSize = true;
             this.lblTotTitle.Font = new System.Drawing.Font("Segoe UI", 11.5F, System.Drawing.FontStyle.Bold);
-            this.lblTotTitle.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this.lblTotTitle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this.lblTotTitle.Location = new System.Drawing.Point(0, 80);
             this.lblTotTitle.Name = "lblTotTitle";
             this.lblTotTitle.Size = new System.Drawing.Size(48, 21);
@@ -165,7 +167,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             // pnlLine
             // 
-            this.pnlLine.BackColor = System.Drawing.Color.FromArgb(226, 232, 240);
+            this.pnlLine.BackColor = Tonyo_sPizza.UI.Theme.AppColors.Border;
             this.pnlLine.Location = new System.Drawing.Point(0, 72);
             this.pnlLine.Name = "pnlLine";
             this.pnlLine.Size = new System.Drawing.Size(285, 1);
@@ -174,7 +176,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // _lblDiscount
             // 
             this._lblDiscount.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this._lblDiscount.ForeColor = System.Drawing.Color.FromArgb(234, 88, 12);
+            this._lblDiscount.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.Primary;
             this._lblDiscount.Location = new System.Drawing.Point(160, 48);
             this._lblDiscount.Name = "_lblDiscount";
             this._lblDiscount.Size = new System.Drawing.Size(125, 18);
@@ -186,7 +188,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.lblDiscTitle.AutoSize = true;
             this.lblDiscTitle.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblDiscTitle.ForeColor = System.Drawing.Color.FromArgb(234, 88, 12);
+            this.lblDiscTitle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.Primary;
             this.lblDiscTitle.Location = new System.Drawing.Point(0, 48);
             this.lblDiscTitle.Name = "lblDiscTitle";
             this.lblDiscTitle.Size = new System.Drawing.Size(54, 15);
@@ -196,7 +198,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // _lblServiceFee
             // 
             this._lblServiceFee.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this._lblServiceFee.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this._lblServiceFee.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this._lblServiceFee.Location = new System.Drawing.Point(160, 26);
             this._lblServiceFee.Name = "_lblServiceFee";
             this._lblServiceFee.Size = new System.Drawing.Size(125, 18);
@@ -208,7 +210,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.lblFeeTitle.AutoSize = true;
             this.lblFeeTitle.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblFeeTitle.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
+            this.lblFeeTitle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMuted;
             this.lblFeeTitle.Location = new System.Drawing.Point(0, 26);
             this.lblFeeTitle.Name = "lblFeeTitle";
             this.lblFeeTitle.Size = new System.Drawing.Size(64, 15);
@@ -218,7 +220,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // _lblSubtotal
             // 
             this._lblSubtotal.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this._lblSubtotal.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this._lblSubtotal.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this._lblSubtotal.Location = new System.Drawing.Point(160, 4);
             this._lblSubtotal.Name = "_lblSubtotal";
             this._lblSubtotal.Size = new System.Drawing.Size(125, 18);
@@ -230,7 +232,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.lblSubTitle.AutoSize = true;
             this.lblSubTitle.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblSubTitle.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
+            this.lblSubTitle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMuted;
             this.lblSubTitle.Location = new System.Drawing.Point(0, 4);
             this.lblSubTitle.Name = "lblSubTitle";
             this.lblSubTitle.Size = new System.Drawing.Size(51, 15);
@@ -240,32 +242,49 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // pnlPromo
             // 
             this.pnlPromo.Controls.Add(this._btnApplyPromo);
-            this.pnlPromo.Controls.Add(this._txtPromoCode);
+            this.pnlPromo.Controls.Add(this.pnlPromoBox);
             this.pnlPromo.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlPromo.Location = new System.Drawing.Point(0, 8);
+            this.pnlPromo.Location = new System.Drawing.Point(0, 6);
             this.pnlPromo.Name = "pnlPromo";
-            this.pnlPromo.Size = new System.Drawing.Size(288, 36);
+            this.pnlPromo.Size = new System.Drawing.Size(288, 38);
             this.pnlPromo.TabIndex = 0;
+            // 
+            // pnlPromoBox
+            // 
+            this.pnlPromoBox.BackColor = Tonyo_sPizza.UI.Theme.AppColors.Background;
+            this.pnlPromoBox.BorderColor = Tonyo_sPizza.UI.Theme.AppColors.Border;
+            this.pnlPromoBox.BorderRadius = 8;
+            this.pnlPromoBox.BorderWidth = 1;
+            this.pnlPromoBox.Controls.Add(this._txtPromoCode);
+            this.pnlPromoBox.DrawBorder = true;
+            this.pnlPromoBox.Location = new System.Drawing.Point(0, 3);
+            this.pnlPromoBox.Name = "pnlPromoBox";
+            this.pnlPromoBox.Size = new System.Drawing.Size(192, 32);
+            this.pnlPromoBox.TabIndex = 0;
             // 
             // _btnApplyPromo
             // 
-            this._btnApplyPromo.BorderRadius = 6;
+            this._btnApplyPromo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._btnApplyPromo.BorderRadius = 8;
             this._btnApplyPromo.Font = new System.Drawing.Font("Segoe UI Semibold", 8.5F, System.Drawing.FontStyle.Bold);
-            this._btnApplyPromo.ForeColor = System.Drawing.Color.FromArgb(194, 65, 12);
-            this._btnApplyPromo.Location = new System.Drawing.Point(190, 4);
+            this._btnApplyPromo.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryDark;
+            this._btnApplyPromo.Location = new System.Drawing.Point(200, 3);
             this._btnApplyPromo.Name = "_btnApplyPromo";
-            this._btnApplyPromo.NormalColor = System.Drawing.Color.FromArgb(255, 237, 213);
-            this._btnApplyPromo.HoverColor = System.Drawing.Color.FromArgb(254, 215, 170);
-            this._btnApplyPromo.Size = new System.Drawing.Size(95, 30);
+            this._btnApplyPromo.NormalColor = Tonyo_sPizza.UI.Theme.AppColors.PrimarySoft;
+            this._btnApplyPromo.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryBorder;
+            this._btnApplyPromo.Size = new System.Drawing.Size(86, 32);
             this._btnApplyPromo.TabIndex = 1;
-            this._btnApplyPromo.Text = "Promo";
+            this._btnApplyPromo.Text = "Apply";
             // 
             // _txtPromoCode
             // 
-            this._txtPromoCode.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this._txtPromoCode.Location = new System.Drawing.Point(0, 6);
+            this._txtPromoCode.BackColor = Tonyo_sPizza.UI.Theme.AppColors.Background;
+            this._txtPromoCode.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this._txtPromoCode.Font = new System.Drawing.Font("Segoe UI", 9.25F);
+            this._txtPromoCode.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
+            this._txtPromoCode.Location = new System.Drawing.Point(10, 7);
             this._txtPromoCode.Name = "_txtPromoCode";
-            this._txtPromoCode.Size = new System.Drawing.Size(180, 23);
+            this._txtPromoCode.Size = new System.Drawing.Size(172, 17);
             this._txtPromoCode.TabIndex = 0;
             // 
             // pnlOrderHeader
@@ -286,7 +305,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             this._chkCartSelectAll.CheckState = System.Windows.Forms.CheckState.Checked;
             this._chkCartSelectAll.Cursor = System.Windows.Forms.Cursors.Hand;
             this._chkCartSelectAll.Font = new System.Drawing.Font("Segoe UI Semibold", 8.5F, System.Drawing.FontStyle.Bold);
-            this._chkCartSelectAll.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
+            this._chkCartSelectAll.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMuted;
             this._chkCartSelectAll.Location = new System.Drawing.Point(230, 4);
             this._chkCartSelectAll.Name = "_chkCartSelectAll";
             this._chkCartSelectAll.Size = new System.Drawing.Size(39, 19);
@@ -298,7 +317,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.lblOrderTitle.AutoSize = true;
             this.lblOrderTitle.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblOrderTitle.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this.lblOrderTitle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this.lblOrderTitle.Location = new System.Drawing.Point(0, 4);
             this.lblOrderTitle.Name = "lblOrderTitle";
             this.lblOrderTitle.Size = new System.Drawing.Size(81, 21);
@@ -321,7 +340,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this._lblCartAddress.AutoEllipsis = true;
             this._lblCartAddress.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this._lblCartAddress.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this._lblCartAddress.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this._lblCartAddress.Location = new System.Drawing.Point(2, 24);
             this._lblCartAddress.Name = "_lblCartAddress";
             this._lblCartAddress.Size = new System.Drawing.Size(280, 32);
@@ -332,7 +351,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.lblAddrHeader.AutoSize = true;
             this.lblAddrHeader.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
-            this.lblAddrHeader.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
+            this.lblAddrHeader.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMuted;
             this.lblAddrHeader.Location = new System.Drawing.Point(2, 6);
             this.lblAddrHeader.Name = "lblAddrHeader";
             this.lblAddrHeader.Size = new System.Drawing.Size(109, 13);
@@ -342,7 +361,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // pnlBrandCard
             // 
             this.pnlBrandCard.BackColor = System.Drawing.Color.White;
-            this.pnlBrandCard.BorderColor = System.Drawing.Color.FromArgb(226, 232, 240);
+            this.pnlBrandCard.BorderColor = Tonyo_sPizza.UI.Theme.AppColors.Border;
             this.pnlBrandCard.BorderRadius = 12;
             this.pnlBrandCard.BorderWidth = 1;
             this.pnlBrandCard.Controls.Add(this.lblBrandSub);
@@ -360,7 +379,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.lblBrandSub.AutoSize = true;
             this.lblBrandSub.Font = new System.Drawing.Font("Segoe UI Semibold", 8.5F, System.Drawing.FontStyle.Bold);
-            this.lblBrandSub.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
+            this.lblBrandSub.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextMuted;
             this.lblBrandSub.Location = new System.Drawing.Point(60, 42);
             this.lblBrandSub.Name = "lblBrandSub";
             this.lblBrandSub.Size = new System.Drawing.Size(157, 15);
@@ -371,7 +390,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.lblBrandName.AutoSize = true;
             this.lblBrandName.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
-            this.lblBrandName.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this.lblBrandName.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this.lblBrandName.Location = new System.Drawing.Point(60, 15);
             this.lblBrandName.Name = "lblBrandName";
             this.lblBrandName.Size = new System.Drawing.Size(156, 25);
@@ -388,7 +407,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // _pnlMainContent
             // 
             this._pnlMainContent.AutoScroll = true;
-            this._pnlMainContent.BackColor = System.Drawing.Color.FromArgb(248, 250, 252);
+            this._pnlMainContent.BackColor = Tonyo_sPizza.UI.Theme.AppColors.Background;
             this._pnlMainContent.Controls.Add(this._flpFoodCards);
             this._pnlMainContent.Controls.Add(this.foodHeader);
             this._pnlMainContent.Controls.Add(this._flpCategories);
@@ -427,12 +446,13 @@ namespace Tonyo_sPizza.UI.Views.Customer
             this.lblFoodTitle.AutoSize = true;
             this.lblFoodTitle.Dock = System.Windows.Forms.DockStyle.Left;
             this.lblFoodTitle.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
-            this.lblFoodTitle.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this.lblFoodTitle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this.lblFoodTitle.Location = new System.Drawing.Point(0, 10);
             this.lblFoodTitle.Name = "lblFoodTitle";
             this.lblFoodTitle.Size = new System.Drawing.Size(248, 25);
             this.lblFoodTitle.TabIndex = 0;
             this.lblFoodTitle.Text = "Popular Food & Pizza Menu";
+            this.lblFoodTitle.UseMnemonic = false;
             // 
             // _flpCategories
             // 
@@ -440,8 +460,8 @@ namespace Tonyo_sPizza.UI.Views.Customer
             this._flpCategories.Dock = System.Windows.Forms.DockStyle.Top;
             this._flpCategories.Location = new System.Drawing.Point(24, 196);
             this._flpCategories.Name = "_flpCategories";
-            this._flpCategories.Padding = new System.Windows.Forms.Padding(0, 4, 0, 6);
-            this._flpCategories.Size = new System.Drawing.Size(880, 52);
+            this._flpCategories.Padding = new System.Windows.Forms.Padding(0, 4, 0, 8);
+            this._flpCategories.Size = new System.Drawing.Size(880, 62);
             this._flpCategories.TabIndex = 2;
             this._flpCategories.WrapContents = false;
             // 
@@ -460,7 +480,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
             this.lblCategoryTitle.AutoSize = true;
             this.lblCategoryTitle.Dock = System.Windows.Forms.DockStyle.Left;
             this.lblCategoryTitle.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
-            this.lblCategoryTitle.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
+            this.lblCategoryTitle.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.TextDark;
             this.lblCategoryTitle.Location = new System.Drawing.Point(0, 10);
             this.lblCategoryTitle.Name = "lblCategoryTitle";
             this.lblCategoryTitle.Size = new System.Drawing.Size(89, 25);
@@ -469,14 +489,15 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             // banner
             // 
+            this.banner.BorderRadius = 14;
             this.banner.Controls.Add(this.btnOrderNow);
             this.banner.Controls.Add(this.lblBannerSub);
             this.banner.Controls.Add(this.lblBannerTitle);
             this.banner.Dock = System.Windows.Forms.DockStyle.Top;
             this.banner.DrawBorder = false;
             this.banner.GradientAngle = 45F;
-            this.banner.GradientEndColor = System.Drawing.Color.FromArgb(234, 88, 12);
-            this.banner.GradientStartColor = System.Drawing.Color.FromArgb(249, 115, 22);
+            this.banner.GradientEndColor = Tonyo_sPizza.UI.Theme.AppColors.BannerGradientEnd;
+            this.banner.GradientStartColor = Tonyo_sPizza.UI.Theme.AppColors.BannerGradientStart;
             this.banner.Location = new System.Drawing.Point(24, 16);
             this.banner.Margin = new System.Windows.Forms.Padding(0, 0, 0, 20);
             this.banner.Name = "banner";
@@ -488,25 +509,27 @@ namespace Tonyo_sPizza.UI.Views.Customer
             // 
             this.btnOrderNow.BorderRadius = 8;
             this.btnOrderNow.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.btnOrderNow.ForeColor = System.Drawing.Color.FromArgb(194, 65, 12);
+            this.btnOrderNow.ForeColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryDark;
             this.btnOrderNow.Location = new System.Drawing.Point(24, 98);
             this.btnOrderNow.Name = "btnOrderNow";
             this.btnOrderNow.NormalColor = System.Drawing.Color.White;
-            this.btnOrderNow.HoverColor = System.Drawing.Color.FromArgb(241, 245, 249);
-            this.btnOrderNow.Size = new System.Drawing.Size(110, 32);
+            this.btnOrderNow.HoverColor = Tonyo_sPizza.UI.Theme.AppColors.PrimarySoft;
+            this.btnOrderNow.PressedColor = Tonyo_sPizza.UI.Theme.AppColors.PrimaryBorder;
+            this.btnOrderNow.Size = new System.Drawing.Size(116, 32);
             this.btnOrderNow.TabIndex = 2;
             this.btnOrderNow.Text = "Order Now";
             // 
             // lblBannerSub
             // 
             this.lblBannerSub.BackColor = System.Drawing.Color.Transparent;
-            this.lblBannerSub.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblBannerSub.ForeColor = System.Drawing.Color.FromArgb(254, 205, 211);
-            this.lblBannerSub.Location = new System.Drawing.Point(24, 65);
+            this.lblBannerSub.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblBannerSub.ForeColor = System.Drawing.Color.FromArgb(254, 232, 224);
+            this.lblBannerSub.Location = new System.Drawing.Point(24, 66);
             this.lblBannerSub.Name = "lblBannerSub";
-            this.lblBannerSub.Size = new System.Drawing.Size(340, 30);
+            this.lblBannerSub.Size = new System.Drawing.Size(580, 24);
             this.lblBannerSub.TabIndex = 1;
-            this.lblBannerSub.Text = "Use promo code TONYO25 at checkout for fresh delicious pizza.";
+            this.lblBannerSub.Text = "Use promo code TONYO25 at checkout for wood-fired sourdough pizza.";
+            this.lblBannerSub.UseMnemonic = false;
             // 
             // lblBannerTitle
             // 
@@ -515,15 +538,16 @@ namespace Tonyo_sPizza.UI.Views.Customer
             this.lblBannerTitle.ForeColor = System.Drawing.Color.White;
             this.lblBannerTitle.Location = new System.Drawing.Point(24, 12);
             this.lblBannerTitle.Name = "lblBannerTitle";
-            this.lblBannerTitle.Size = new System.Drawing.Size(320, 50);
+            this.lblBannerTitle.Size = new System.Drawing.Size(360, 50);
             this.lblBannerTitle.TabIndex = 0;
-            this.lblBannerTitle.Text = "Get Discount Voucher\r\nUp To 25%";
+            this.lblBannerTitle.Text = "Fresh Out of the Brick Oven\r\nSave Up To 25%";
+            this.lblBannerTitle.UseMnemonic = false;
             // 
             // CustomerMenuControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(248, 250, 252);
+            this.BackColor = Tonyo_sPizza.UI.Theme.AppColors.Background;
             this.Controls.Add(this._pnlMainContent);
             this.Controls.Add(this._pnlRightSidebar);
             this.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -569,6 +593,7 @@ namespace Tonyo_sPizza.UI.Views.Customer
         private System.Windows.Forms.Label _lblSubtotal;
         private System.Windows.Forms.Label lblSubTitle;
         private System.Windows.Forms.Panel pnlPromo;
+        private Tonyo_sPizza.UI.Controls.RoundedPanel pnlPromoBox;
         private Tonyo_sPizza.UI.Controls.RoundedButton _btnApplyPromo;
         private System.Windows.Forms.TextBox _txtPromoCode;
         private System.Windows.Forms.Panel pnlOrderHeader;

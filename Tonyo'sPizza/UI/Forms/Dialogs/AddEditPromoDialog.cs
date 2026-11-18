@@ -187,8 +187,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(140, 2),
                 Size = new Size(110, 38),
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(241, 245, 249),
-                HoverColor = Color.FromArgb(226, 232, 240),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                PressedColor = AppColors.SecondaryPressed,
                 ForeColor = AppColors.TextDark,
                 Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold)
             };
@@ -225,6 +226,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
             pnlCard.Controls.Add(pnlButtons);
 
             Controls.Add(pnlCard);
+
+            AcceptButton = _btnSave;
+            CancelButton = _btnCancel;
         }
 
         private void PopulateData()

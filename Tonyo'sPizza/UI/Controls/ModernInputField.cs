@@ -74,13 +74,13 @@ namespace Tonyo_sPizza.UI.Controls
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
 
             Size = new Size(380, 42);
-            BackColor = Color.FromArgb(248, 250, 252);
+            BackColor = AppColors.Background;
 
             _textBox = new TextBox
             {
                 BorderStyle = BorderStyle.None,
                 Font = new Font("Segoe UI", 10f),
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = AppColors.Background,
                 ForeColor = AppColors.TextDark
             };
 
@@ -95,8 +95,8 @@ namespace Tonyo_sPizza.UI.Controls
             _textBox.LostFocus += (s, e) =>
             {
                 _isFocused = false;
-                BackColor = Color.FromArgb(248, 250, 252);
-                _textBox.BackColor = Color.FromArgb(248, 250, 252);
+                BackColor = AppColors.Background;
+                _textBox.BackColor = AppColors.Background;
                 Invalidate();
             };
 
@@ -163,7 +163,7 @@ namespace Tonyo_sPizza.UI.Controls
             using (GraphicsPath path = UIHelper.GetRoundedRectanglePath(rect, _borderRadius))
             {
                 // 2. Fill background
-                Color fillBg = _isFocused ? Color.White : Color.FromArgb(248, 250, 252);
+                Color fillBg = _isFocused ? Color.White : AppColors.Background;
                 using (SolidBrush brush = new SolidBrush(fillBg))
                 {
                     g.FillPath(brush, path);

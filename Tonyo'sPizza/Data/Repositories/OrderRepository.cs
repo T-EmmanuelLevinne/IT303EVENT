@@ -536,6 +536,10 @@ namespace Tonyo_sPizza.Data.Repositories
             {
                 o.IsStockDeducted = Convert.ToBoolean(row["IsStockDeducted"]);
             }
+            if (row.Table.Columns.Contains("RowVersion") && row["RowVersion"] != DBNull.Value)
+            {
+                o.RowVersion = (byte[])row["RowVersion"];
+            }
 
             return o;
         }

@@ -13,6 +13,13 @@ namespace Tonyo_sPizza.Models
         private string _address;
         private DateTime _createdAt;
 
+        public string Salt { get; set; }
+        public bool IsActive { get; set; } = true;
+        public int FailedLoginAttempts { get; set; } = 0;
+        public bool IsLocked { get; set; } = false;
+        public DateTime? LockoutUntil { get; set; }
+        public byte[] RowVersion { get; set; }
+
         public int UserId
         {
             get => _userId;
@@ -74,11 +81,24 @@ namespace Tonyo_sPizza.Models
         public bool IsAdmin => _role == "Admin";
         public bool IsCrew => _role == "Crew";
         public bool IsCustomer => _role == "Customer";
+        public bool IsGuest { get; set; }
+        public bool IsGuestAccount => IsGuest || string.Equals(_username, "guest", StringComparison.OrdinalIgnoreCase);
+
+        public string AccountStatusDisplay
+        {
+            get
+            {
+                if (!IsActive) return "Inactive";
+                if (IsLocked && (!LockoutUntil.HasValue || LockoutUntil.Value > DateTime.Now)) return "Locked";
+                return "Active";
+            }
+        }
 
         public User()
         {
             _createdAt = DateTime.Now;
             _role = "Customer";
+            IsActive = true;
         }
 
         public User(int userId, string username, string passwordHash, string fullName, string role, string phone, string address, DateTime createdAt)
@@ -91,11 +111,21 @@ namespace Tonyo_sPizza.Models
             Phone = phone;
             Address = address;
             _createdAt = createdAt;
+            IsActive = true;
         }
 
         public User Clone()
         {
-            return new User(_userId, _username, _passwordHash, _fullName, _role, _phone, _address, _createdAt);
+            return new User(_userId, _username, _passwordHash, _fullName, _role, _phone, _address, _createdAt)
+            {
+                Salt = this.Salt,
+                IsActive = this.IsActive,
+                FailedLoginAttempts = this.FailedLoginAttempts,
+                IsLocked = this.IsLocked,
+                LockoutUntil = this.LockoutUntil,
+                IsGuest = this.IsGuest,
+                RowVersion = this.RowVersion != null ? (byte[])this.RowVersion.Clone() : null
+            };
         }
     }
 }

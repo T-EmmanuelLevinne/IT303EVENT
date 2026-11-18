@@ -89,8 +89,8 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(282, y - 2),
                 Size = new Size(132, 32),
                 BorderRadius = 6,
-                NormalColor = Color.FromArgb(71, 85, 105),
-                HoverColor = Color.FromArgb(100, 116, 139),
+                NormalColor = AppColors.TextMedium,
+                HoverColor = AppColors.TextDark,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold)
             };
             _btnNewCategory.Click += BtnNewCategory_Click;
@@ -127,8 +127,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
                 Location = new Point(254, y),
                 Size = new Size(160, 42),
                 BorderRadius = 8,
-                NormalColor = Color.FromArgb(226, 232, 240),
-                HoverColor = Color.FromArgb(203, 213, 225),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                PressedColor = AppColors.SecondaryPressed,
                 ForeColor = AppColors.TextDark
             };
             _btnCancel.Click += (s, e) => Close();
@@ -149,6 +150,9 @@ namespace Tonyo_sPizza.UI.Forms.Dialogs
 
             Controls.Add(content);
             Controls.Add(header);
+
+            AcceptButton = _btnSave;
+            CancelButton = _btnCancel;
         }
 
         private void LoadCategories()

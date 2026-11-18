@@ -38,6 +38,7 @@ namespace Tonyo_sPizza.UI.Controls
         public event Action<int> UnarchiveRequested;
         public event Action<int> DeleteRequested;
         public event Action<int> CancelRequested;
+        public event Action<Order> ReceiptRequested;
         public event EventHandler SelectionChanged;
 
         private readonly bool _isCrewView;
@@ -47,15 +48,17 @@ namespace Tonyo_sPizza.UI.Controls
             _order = order;
             _isCrewView = isCrewView;
 
-            Width = 370;
-            Height = 280;
+            DoubleBuffered = true;
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+            Width = 408;
+            Height = 282;
             Margin = new Padding(0, 0, 16, 16);
             BackColor = AppColors.Background;
 
             _card = new RoundedPanel
             {
                 Dock = DockStyle.Fill,
-                BorderRadius = 14,
+                BorderRadius = 12,
                 BackColor = Color.White,
                 BorderColor = AppColors.Border,
                 DrawBorder = true,
@@ -173,8 +176,8 @@ namespace Tonyo_sPizza.UI.Controls
                 Dock = DockStyle.Left,
                 Width = 76,
                 BorderRadius = 10,
-                BackColor = Color.FromArgb(254, 242, 242),
-                BorderColor = Color.FromArgb(254, 202, 202),
+                BackColor = Color.FromArgb(253, 246, 238),
+                BorderColor = AppColors.Border,
                 DrawBorder = true,
                 BorderWidth = 1,
                 Padding = new Padding(3),
@@ -185,7 +188,7 @@ namespace Tonyo_sPizza.UI.Controls
             {
                 Dock = DockStyle.Fill,
                 SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.FromArgb(254, 242, 242),
+                BackColor = Color.FromArgb(253, 246, 238),
                 Image = GetOrderItemImage()
             };
             picWrapper.Controls.Add(_picItem);
@@ -262,13 +265,13 @@ namespace Tonyo_sPizza.UI.Controls
             _btnCancel = new RoundedButton
             {
                 Text = "Cancel",
-                Width = 65,
+                Width = 64,
                 Height = 32,
                 BorderRadius = 6,
-                NormalColor = Color.FromArgb(254, 226, 226),
+                NormalColor = AppColors.StatusCancelledBg,
                 HoverColor = Color.FromArgb(254, 202, 202),
-                ForeColor = Color.FromArgb(220, 38, 38),
-                Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold),
+                ForeColor = AppColors.StatusCancelled,
+                Font = new Font("Segoe UI Semibold", 8.25f, FontStyle.Bold),
                 Margin = new Padding(4, 0, 0, 0)
             };
             _btnCancel.Click += (s, e) => CancelRequested?.Invoke(_order.OrderId);
@@ -276,16 +279,31 @@ namespace Tonyo_sPizza.UI.Controls
             _btnArchive = new RoundedButton
             {
                 Text = _order.IsArchived ? "Archived" : "Archive",
-                Width = 68,
+                Width = 66,
                 Height = 32,
                 BorderRadius = 6,
-                NormalColor = Color.FromArgb(241, 245, 249),
-                HoverColor = Color.FromArgb(226, 232, 240),
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
                 ForeColor = AppColors.TextDark,
-                Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold),
+                Font = new Font("Segoe UI Semibold", 8.25f, FontStyle.Bold),
                 Margin = new Padding(4, 0, 0, 0)
             };
             _btnArchive.Click += (s, e) => ArchiveRequested?.Invoke(_order.OrderId);
+
+            var btnReceipt = new RoundedButton
+            {
+                Text = "Slip",
+                IconName = "print",
+                Width = 62,
+                Height = 32,
+                BorderRadius = 6,
+                NormalColor = AppColors.SecondaryNormal,
+                HoverColor = AppColors.SecondaryHover,
+                ForeColor = AppColors.TextDark,
+                Font = new Font("Segoe UI Semibold", 8.25f, FontStyle.Bold),
+                Margin = new Padding(4, 0, 0, 0)
+            };
+            btnReceipt.Click += (s, e) => ReceiptRequested?.Invoke(_order);
 
             // Visibility rules for buttons
             if (_order.IsArchived)
@@ -305,9 +323,12 @@ namespace Tonyo_sPizza.UI.Controls
                 if (_btnAction.Visible) flpActions.Controls.Add(_btnAction);
                 if (_btnCancel.Visible) flpActions.Controls.Add(_btnCancel);
                 flpActions.Controls.Add(_btnArchive);
+                flpActions.Controls.Add(btnReceipt);
             }
             else
             {
+                flpActions.Controls.Add(btnReceipt);
+
                 // Customer View
                 if ((_order.Status == "Pending" || _order.Status == "Preparing") && !_order.IsCustomerArchived)
                 {
@@ -396,6 +417,68 @@ namespace Tonyo_sPizza.UI.Controls
             _card.Controls.Add(topPanel);
 
             Controls.Add(_card);
+            AttachContextMenu(_card, topPanel, _lblOrderHeader, _lblCustomerInfo, _lblItems, _lblNotes, _lblTotal);
+        }
+
+        private void AttachContextMenu(params Control[] targets)
+        {
+            var menu = UIHelper.CreateModernContextMenu();
+            menu.Opening += (s, e) =>
+            {
+                menu.Items.Clear();
+                menu.Items.Add(UIHelper.CreateModernMenuItem($"Print Receipt (#{_order.OrderId})", "print", (sender, args) => ReceiptRequested?.Invoke(_order)));
+
+                if (_isCrewView && !_order.IsArchived)
+                {
+                    string nextStatus = null;
+                    string nextLabel = null;
+                    if (_order.Status == "Pending") { nextStatus = "Preparing"; nextLabel = "Start Preparing"; }
+                    else if (_order.Status == "Preparing") { nextStatus = "Ready to Serve"; nextLabel = "Mark Ready to Serve"; }
+                    else if (_order.Status == "Ready to Serve") { nextStatus = "Completed"; nextLabel = "Complete Order"; }
+
+                    if (nextStatus != null)
+                    {
+                        string captureStatus = nextStatus;
+                        menu.Items.Add(UIHelper.CreateModernMenuItem(nextLabel, "kitchen", (sender, args) => StatusChangeRequested?.Invoke(_order.OrderId, captureStatus)));
+                    }
+
+                    menu.Items.Add(UIHelper.CreateModernMenuItem("Archive Order", "archive", (sender, args) => ArchiveRequested?.Invoke(_order.OrderId), AppColors.StatusPending));
+
+                    if (_order.Status != "Completed" && _order.Status != "Cancelled")
+                    {
+                        menu.Items.Add(new ToolStripSeparator());
+                        menu.Items.Add(UIHelper.CreateModernMenuItem("Cancel Order", "delete", (sender, args) => CancelRequested?.Invoke(_order.OrderId), AppColors.StatusCancelled));
+                    }
+                }
+                else if (!_isCrewView)
+                {
+                    if ((_order.Status == "Pending" || _order.Status == "Preparing") && !_order.IsCustomerArchived)
+                    {
+                        menu.Items.Add(new ToolStripSeparator());
+                        menu.Items.Add(UIHelper.CreateModernMenuItem("Cancel Order", "delete", (sender, args) => CancelRequested?.Invoke(_order.OrderId), AppColors.StatusCancelled));
+                    }
+                    else if (_order.IsCustomerArchived)
+                    {
+                        menu.Items.Add(UIHelper.CreateModernMenuItem("Restore Order", "refresh", (sender, args) => UnarchiveRequested?.Invoke(_order.OrderId)));
+                        if (_order.Status == "Completed" || _order.Status == "Cancelled")
+                        {
+                            menu.Items.Add(new ToolStripSeparator());
+                            menu.Items.Add(UIHelper.CreateModernMenuItem("Delete Permanently", "delete", (sender, args) => DeleteRequested?.Invoke(_order.OrderId), AppColors.StatusCancelled));
+                        }
+                    }
+                    else if (_order.Status == "Completed" || _order.Status == "Cancelled")
+                    {
+                        menu.Items.Add(UIHelper.CreateModernMenuItem("Move to Archive", "archive", (sender, args) => ArchiveRequested?.Invoke(_order.OrderId), AppColors.StatusPending));
+                        menu.Items.Add(new ToolStripSeparator());
+                        menu.Items.Add(UIHelper.CreateModernMenuItem("Delete Permanently", "delete", (sender, args) => DeleteRequested?.Invoke(_order.OrderId), AppColors.StatusCancelled));
+                    }
+                }
+            };
+
+            foreach (var c in targets)
+            {
+                if (c != null) c.ContextMenuStrip = menu;
+            }
         }
 
         private void UpdateStatusBadge()

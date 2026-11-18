@@ -17,22 +17,30 @@ namespace Tonyo_sPizza.Services
             _repo = new AuditLogRepository();
         }
 
-        public void Log(string action, string details)
+        public void Log(string action, string details, string tableName = null, string recordId = null)
         {
             var user = AuthService.Instance?.CurrentUser;
             string username = user != null ? user.Username : "System";
-            int? userId = user != null ? (int?)user.UserId : null;
-            _repo.LogAction(username, action, details, userId);
+            int? userId = (user != null && user.UserId > 0) ? (int?)user.UserId : null;
+            _repo.LogAction(username, action, details, userId, tableName, recordId);
         }
 
-        public List<AuditLog> GetAllLogs(int limit = 200)
+        public void LogForUser(string username, int? userId, string action, string details, string tableName = null, string recordId = null)
+        {
+            _repo.LogAction(username, action, details, userId, tableName, recordId);
+        }
+
+        public List<AuditLog> GetAllLogs(int limit = 250)
         {
             return _repo.GetAllLogs(limit);
         }
 
-        public List<AuditLog> SearchLogs(string query, string actionFilter = "All", int limit = 200)
+        public List<AuditLog> SearchLogs(string query, string actionFilter = "All", string userFilter = "All", DateTime? fromDate = null, DateTime? toDate = null, int limit = 300)
         {
-            return _repo.SearchLogs(query, actionFilter, limit);
+            return _repo.SearchLogs(query, actionFilter, userFilter, fromDate, toDate, limit);
         }
+
+        public List<string> GetDistinctUsernames() => _repo.GetDistinctUsernames();
+        public List<string> GetDistinctActions() => _repo.GetDistinctActions();
     }
 }

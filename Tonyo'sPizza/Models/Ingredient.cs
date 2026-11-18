@@ -83,6 +83,9 @@ namespace Tonyo_sPizza.Models
             set => _createdAt = value;
         }
 
+        public bool IsActive { get; set; } = true;
+        public byte[] RowVersion { get; set; }
+
         public bool IsLowStock => _currentStock <= _minThreshold;
         public bool IsOutOfStock => _currentStock <= 0;
 
@@ -90,6 +93,7 @@ namespace Tonyo_sPizza.Models
         {
             get
             {
+                if (!IsActive) return "Archived";
                 if (IsOutOfStock) return "Out of Stock";
                 if (IsLowStock) return "Low Stock";
                 return "In Stock";
@@ -119,7 +123,11 @@ namespace Tonyo_sPizza.Models
 
         public Ingredient Clone()
         {
-            return new Ingredient(_ingredientId, _name, _currentStock, _unit, _minThreshold, _costPerUnit, _createdAt, _categoryId, _categoryName);
+            return new Ingredient(_ingredientId, _name, _currentStock, _unit, _minThreshold, _costPerUnit, _createdAt, _categoryId, _categoryName)
+            {
+                IsActive = this.IsActive,
+                RowVersion = this.RowVersion != null ? (byte[])this.RowVersion.Clone() : null
+            };
         }
 
         public override string ToString()
